@@ -1,0 +1,25 @@
+{
+  "name": "frisky-girl-farm-api",
+  "version": "1.0.0",
+  "description": "Frisky Girl Farm API server",
+  "main": "src/index.js",
+  "repository": "https://github.com/bendemboski/frisky-girl-farm-api",
+  "author": "Ben Demboski <demboskb@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha"
+  },
+  "private": false,
+  "dependencies": {
+    "googleapis": "^36.0.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^5.10.0",
+    "eslint-plugin-turbopatent": "^4.0.0",
+    "mocha": "^5.2.0",
+    "sinon": "^7.2.2",
+    "sinon-chai": "^3.3.0"
+  }
+}
