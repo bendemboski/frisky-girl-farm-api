@@ -43,12 +43,16 @@ describe('OrdersSheet', function() {
       ordered[2] += orders[2] || 0;
       ordered[3] += orders[3] || 0;
     });
-    values.get.resolves([
-      [ '', 'Lettuce', 'Kale', 'Spicy Greens' ],
-      totals,
-      ordered,
-      ...users
-    ]);
+    values.get.resolves({
+      data: {
+        values: [
+          [ '', 'Lettuce', 'Kale', 'Spicy Greens' ],
+          totals,
+          ordered,
+          ...users
+        ]
+      }
+    });
   }
 
   describe('getForUser', function() {

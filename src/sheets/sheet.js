@@ -9,18 +9,20 @@ class Sheet {
   }
 
   async getAll({ majorDimension } = {}) {
-    return await this._values.get({
+    let { data: { values } } = await this._values.get({
       spreadsheetId: this.spreadsheetId,
       range: this.sheetName,
       majorDimension
     });
+    return values;
   }
 
   async getRange(range) {
-    return await this._values.get({
+    let { data: { values } } = await this._values.get({
       spreadsheetId: this.spreadsheetId,
       range: this._range(range)
     });
+    return values;
   }
 
   async append(range, values) {

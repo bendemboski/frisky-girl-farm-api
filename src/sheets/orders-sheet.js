@@ -44,6 +44,7 @@ class OrdersSheet extends Sheet {
       if (e.code === 400) {
         throw new SheetNotFoundError();
       }
+      throw e;
     }
     let [ , ...names ] = rows[namesRowIndex];
     let [ , ...limits ] = rows[limitsRowIndex];
