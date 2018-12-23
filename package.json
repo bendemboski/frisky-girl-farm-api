@@ -7,11 +7,17 @@
   "author": "Ben Demboski <demboskb@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "lint": "eslint .",
+    "deploy": "AWS_PROFILE=friskygirl sls deploy"
   },
   "private": false,
   "dependencies": {
-    "googleapis": "^36.0.0"
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "express-async-handler": "^1.1.4",
+    "googleapis": "^36.0.0",
+    "serverless-http": "^1.8.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
@@ -19,6 +25,7 @@
     "eslint": "^5.10.0",
     "eslint-plugin-turbopatent": "^4.0.0",
     "mocha": "^5.2.0",
+    "serverless": "^1.35.1",
     "sinon": "^7.2.2",
     "sinon-chai": "^3.3.0"
   }

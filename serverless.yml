@@ -1,0 +1,25 @@
+service: frisky-girl-farm-api
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${opt:stage, 'stage'}
+  region: us-west-2
+  environment:
+    GOOGLE_CLIENT_EMAIL: ${file(config.${self:provider.stage}.json):email}
+    GOOGLE_CLIENT_PRIVATE_KEY: ${file(config.${self:provider.stage}.json):privateKey}
+    GOOGLE_SPREADSHEET_ID: ${file(config.${self:provider.stage}.json):spreadsheetId}
+
+functions:
+  app:
+    handler: app.server
+
+    events: # events trigger lambda functions
+      - http: # this is an API Gateway HTTP event trigger
+          path: /
+          method: ANY
+          cors: true
+      - http: # all routes get proxied to the Express router
+          path: /{proxy+}
+          method: ANY
+          cors: true
