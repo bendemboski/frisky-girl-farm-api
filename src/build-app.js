@@ -6,6 +6,16 @@ const asyncHandler = require('express-async-handler');
 const createClient = require('./sheets/create-client');
 const Spreadsheet = require('./sheets/spreadsheet');
 
+async function getSpreadsheet() {
+  return new Spreadsheet({
+    id: process.env.GOOGLE_SPREADSHEET_ID,
+    client: await createClient({
+      email: process.env.GOOGLE_CLIENT_EMAIL,
+      key: process.env.GOOGLE_CLIENT_PRIVATE_KEY
+    })
+  });
+}
+
 function buildApp() {
   let app = express();
   app.use(bodyParser.urlencoded({ extended: false }));
@@ -13,14 +23,6 @@ function buildApp() {
     type: [ 'application/json' ]
   }));
   app.use(cors());
-
-  let spreadsheet = new Spreadsheet({
-    id: process.env.GOOGLE_SPREADSHEET_ID,
-    client: createClient({
-      email: process.env.GOOGLE_CLIENT_EMAIL,
-      key: process.env.GOOGLE_CLIENT_PRIVATE_KEY
-    })
-  });
 
   //
   // get products
@@ -30,6 +32,7 @@ function buildApp() {
       query: { userId }
     } = req;
 
+    let spreadsheet = await getSpreadsheet();
     return res.status(200).json(await spreadsheet.getProducts(userId));
   }));
 
@@ -47,6 +50,7 @@ function buildApp() {
       return res.status(400).json({ code: 'badInput', message: "Must specify 'quantity' as a non-negative number" });
     }
 
+    let spreadsheet = await getSpreadsheet();
     return res.status(200).json(await spreadsheet.getProducts(userId, product, quantity));
   }));
 
