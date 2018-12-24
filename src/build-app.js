@@ -33,25 +33,25 @@ function buildApp() {
     } = req;
 
     let spreadsheet = await getSpreadsheet();
-    return res.status(200).json(await spreadsheet.getProducts(userId));
+    let products = await spreadsheet.getProducts(userId);
+    return res.status(200).json(Object.keys(products).map((id) => {
+      return Object.assign({ id }, products[id]);
+    }));
   }));
 
-  app.post('/products', asyncHandler(async (req, res) => {
+  app.put('/products/:id', asyncHandler(async (req, res) => {
     let {
       query: { userId },
-      body: { product, quantity }
+      params: { id: productId },
+      body: { quantity }
     } = req;
-
-    if (!product || typeof product !== 'string') {
-      return res.status(400).json({ code: 'badInput', message: "Must specify 'product' as a string" });
-    }
 
     if (typeof quantity !== 'number' || quantity < 0) {
       return res.status(400).json({ code: 'badInput', message: "Must specify 'quantity' as a non-negative number" });
     }
 
     let spreadsheet = await getSpreadsheet();
-    return res.status(200).json(await spreadsheet.getProducts(userId, product, quantity));
+    return res.status(200).json(await spreadsheet.setProductOrder(userId, productId, quantity));
   }));
 
   // Log errors

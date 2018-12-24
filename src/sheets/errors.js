@@ -1,46 +1,23 @@
-class OrdersSheetError extends Error {
-  constructor(...args) {
-    super(...args);
-    Error.captureStackTrace(this, OrdersSheetError);
+class SheetsError extends Error {
+  constructor(code, ...args) {
+    super(code, ...args);
+    Error.captureStackTrace(this, SheetsError);
     this.isSheetsError = true;
+    this.code = code;
   }
 }
 
-class SheetNotFoundError extends OrdersSheetError {
-  constructor(...args) {
-    super(...args);
-    this.code = 'sheetNotFound';
-  }
-}
-class SpreadsheetLockedError extends OrdersSheetError {
-  constructor(...args) {
-    super(...args);
-    this.code = 'spreadsheetLocked';
-  }
-}
-class NegativeQuantityError extends OrdersSheetError {
-  constructor(...args) {
-    super(...args);
-    this.code = 'negativeQuantity';
-  }
-}
-class ProductNotFoundError extends OrdersSheetError {
-  constructor(...args) {
-    super(...args);
-    this.code = 'productNotFound';
-  }
-}
-class QuantityNotAvailableError extends OrdersSheetError {
-  constructor(...args) {
-    super(...args);
-    this.code = 'quantityNotAvailable';
-  }
-}
+const sheetNotFound = 'sheetNotFound';
+const spreadsheetLocked = 'spreadsheetLocked';
+const negativeQuantity = 'negativeQuantity';
+const productNotFound = 'productNotFound';
+const quantityNotAvailable = 'quantityNotAvailable';
 
 module.exports = {
-  SheetNotFoundError,
-  SpreadsheetLockedError,
-  NegativeQuantityError,
-  ProductNotFoundError,
-  QuantityNotAvailableError
+  SheetsError,
+  sheetNotFound,
+  spreadsheetLocked,
+  negativeQuantity,
+  productNotFound,
+  quantityNotAvailable
 };

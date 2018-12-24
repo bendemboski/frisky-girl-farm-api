@@ -1,33 +1,36 @@
 require('./support/setup');
 const { expect } = require('chai');
 const sinon = require('sinon');
-const OrdersSheet = require('../src/sheets/spreadsheet');
+const Spreadsheet = require('../src/sheets/spreadsheet');
 const {
-  SheetNotFoundError,
-  SheetLockedError,
-  QuantityNotAvailableError
+  SheetsError,
+  sheetNotFound,
+  spreadsheetLocked,
+  quantityNotAvailable
 } = require('../src/sheets/errors');
 
 describe('Spreadsheet', function() {
   let values;
+  let getStub;
   let spreadsheet;
 
   beforeEach(function() {
     values = {};
 
-    values.get = sinon.stub().withArgs({
+    values.get = sinon.stub();
+    getStub = values.get.withArgs({
       spreadsheetId: 'ssid',
       range: 'Orders',
-      majorDimension: 'ROWS'
+      majorDimension: 'COLUMNS'
     });
 
-    spreadsheet = new OrdersSheet({
+    spreadsheet = new Spreadsheet({
       client: {
         spreadsheets: {
           values
         }
       },
-      spreadsheetId: 'ssid'
+      id: 'ssid'
     });
     spreadsheet.mutex.retryInterval = 10;
   });
@@ -37,19 +40,20 @@ describe('Spreadsheet', function() {
   });
 
   function setOrders(totals, ...users) {
-    let ordered = [ 'ordered', 0, 0, 0 ];
+    let ordered = [ 0, 0, 0 ];
     users.forEach((orders) => {
-      ordered[1] += orders[1] || 0;
-      ordered[2] += orders[2] || 0;
-      ordered[3] += orders[3] || 0;
+      ordered[0] += orders[1] || 0;
+      ordered[1] += orders[2] || 0;
+      ordered[2] += orders[3] || 0;
     });
-    values.get.resolves({
+
+    getStub.resolves({
       data: {
         values: [
-          [ '', 'Lettuce', 'Kale', 'Spicy Greens' ],
-          totals,
-          ordered,
-          ...users
+          [ '', 'image', 'price', 'total', 'ordered', ...users.map((u) => u[0]) ],
+          [ 'Lettuce', 'http://lettuce.com/image.jpg', 0.15, totals[0], ordered[0], ...users.map((u) => u[1]) ],
+          [ 'Kale', 'http://kale.com/image.jpg', 0.85, totals[1], ordered[1], ...users.map((u) => u[2]) ],
+          [ 'Spicy Greens', 'http://spicy-greens.com/image.jpg', 15.00, totals[2], ordered[2], ...users.map((u) => u[3]) ]
         ]
       }
     });
@@ -58,19 +62,28 @@ describe('Spreadsheet', function() {
   describe('getProducts', function() {
     it('works', async function() {
       setOrders(
-        [ 'total', 7, 3, 5 ],
+        [ 7, 3, 5 ],
         [ 'uid1', 4, 0, 1 ],
         [ 'uid', 3, 2, 0 ]
       );
 
       let ret = await spreadsheet.getProducts('uid');
       expect(ret).to.deep.nested.include({
-        'Lettuce.available': 0,
-        'Lettuce.ordered': 3,
-        'Kale.available': 1,
-        'Kale.ordered': 2,
-        'Spicy Greens.available': 4,
-        'Spicy Greens.ordered': 0
+        '1.name': 'Lettuce',
+        '1.imageUrl': 'http://lettuce.com/image.jpg',
+        '1.price': 0.15,
+        '1.available': 0,
+        '1.ordered': 3,
+        '2.name': 'Kale',
+        '2.imageUrl': 'http://kale.com/image.jpg',
+        '2.price': 0.85,
+        '2.available': 1,
+        '2.ordered': 2,
+        '3.name': 'Spicy Greens',
+        '3.imageUrl': 'http://spicy-greens.com/image.jpg',
+        '3.price': 15.00,
+        '3.available': 4,
+        '3.ordered': 0
       });
     });
 
@@ -78,11 +91,11 @@ describe('Spreadsheet', function() {
       values.get.resetBehavior();
       values.get.rejects({ code: 400 });
 
-      await expect(spreadsheet.getProducts('uid')).to.eventually.be.rejectedWith(SheetNotFoundError);
+      await expect(spreadsheet.getProducts('uid')).to.eventually.be.rejectedWith(SheetsError, sheetNotFound);
     });
   });
 
-  describe('setProductOrdered', function() {
+  describe('setProductOrder', function() {
     beforeEach(function() {
       values.append = sinon.stub().withArgs({
         spreadsheetId: 'ssid',
@@ -106,19 +119,19 @@ describe('Spreadsheet', function() {
 
     it('works and locks the mutex', async function() {
       setOrders(
-        [ 'total', 7, 3, 5 ],
+        [ 7, 3, 5 ],
         [ 'uid2', 4, 0, 1 ],
         [ 'uid', 3, 2, 0 ]
       );
 
-      let ret = await spreadsheet.setProductOrdered('uid', 'Spicy Greens', 3);
+      let ret = await spreadsheet.setProductOrder('uid', 3, 3);
       expect(ret).to.deep.nested.include({
-        'Lettuce.available': 0,
-        'Lettuce.ordered': 3,
-        'Kale.available': 1,
-        'Kale.ordered': 2,
-        'Spicy Greens.available': 1,
-        'Spicy Greens.ordered': 3
+        '1.available': 0,
+        '1.ordered': 3,
+        '2.available': 1,
+        '2.ordered': 2,
+        '3.available': 1,
+        '3.ordered': 3
       });
       expect(values.append).to.have.been.calledOnce;
       expect(values.clear).to.have.been.calledOnce;
@@ -136,21 +149,21 @@ describe('Spreadsheet', function() {
         }
       });
 
-      await expect(spreadsheet.setProductOrdered('uid', 'Spicy Greens', 3)).to.be.rejectedWith(SheetLockedError);
+      await expect(spreadsheet.setProductOrder('uid', 3, 3)).to.be.rejectedWith(SheetsError, spreadsheetLocked);
     });
 
     it('propagates errors', async function() {
       setOrders(
-        [ 'total', 7, 3, 5 ],
+        [ 7, 3, 5 ],
         [ 'uid', 4, 0, 1 ],
         [ 'uid2', 3, 2, 0 ]
       );
-      await expect(spreadsheet.setProductOrdered('uid', 'Spicy Greens', 6)).to.be.rejectedWith(QuantityNotAvailableError);
+      await expect(spreadsheet.setProductOrder('uid', 3, 6)).to.be.rejectedWith(SheetsError, quantityNotAvailable);
 
       values.get.resetBehavior();
       values.get.rejects({ code: 400 });
 
-      await expect(spreadsheet.setProductOrdered('uid', 'Spicy Greens', 1)).to.eventually.be.rejectedWith(SheetNotFoundError);
+      await expect(spreadsheet.setProductOrder('uid', 3, 1)).to.eventually.be.rejectedWith(SheetsError, sheetNotFound);
     });
   });
 });

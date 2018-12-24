@@ -19,23 +19,40 @@ To set this up to deploy and run, perform the following steps:
 
 The API server looks for two sheets in the spreadsheet, identified by name.
 
-There must be a sheet named `Mutex` whose `A1` and `A2` cells contain the
-strings `Name` and `Timestamp` respectively. This sheet must always be present,
-and is used internally to ensure concurrent writes to the sheet don't corrupt
-the data.
+There must be a sheet named `Mutex` laid out like this:
+
+|   | A    | B         |
+|---|------|-----------|
+| 1 | Name | Timestamp |
+
+This sheet must always be present, and is used internally to ensure concurrent
+writes to the sheet don't corrupt the data.
 
 The other sheet the API server looks for is the one named `Orders`. When this
 sheet is present, it will be used to track orders for a currently open order
 period. When not present, orders are not tracked/allowed. The `Orders` sheet
-must contain three rows. `A1` is empty, and the remainder of the row contains
-the names of the products available to order. `A2` contains the string `total`
-and the remainder of the row contains integers representing the total quantity
-of each product that is available in the current order period. `A3` contains
-the string `ordered` and the remainder of the row contains sum formulas for all
-subsequent cells in the column. For example, `B3` contains `=sum(B4:B)` and
-`C3` contains `=sum(C4:C)`. Since row `3` contains formulas, it can be locked
-for editing. The remainder of the rows will be filled in with user orders by
-the API server.
+must contain three rows. The sheet is laid out like this:
+
+|   | A         | B              | C              | D              |
+|---|-----------|----------------|----------------|----------------|
+| 1 |           | (product name) | (product name) | (product name) |
+| 2 | image     | (image URL)    | (image URL)    | (image URL)    |
+| 3 | price     | (price)        | (price)        | (price)        |
+| 4 | total     | (total)        | (total)        | (total)        |
+| 5 | ordered   | =sum(B6:B)     | =sum(C6:C)     | =sum(D6:D)     |
+| 6 | (user id) | (ordered)      | (ordered)      | (ordered)      |
+| 7 | (user id) | (ordered)      | (ordered)      | (ordered)      |
+| 8 | (user id) | (ordered)      | (ordered)      | (ordered)      |
+
+* `product name` (string) the product's name
+* `image URL` (string) the URL of an image of the product
+* `price` (currency) the product's price
+* `total` (number) the total quantity of the product that is available (0 to disable the product)
+* `user id` (string) the id of a user
+* `ordered` (number) a user's quantity of a product ordered
+
+The user order rows (`7` - `9` and beyond) are filled in dynamically by the API
+server.
 
 There can be any number of additional sheets with any name, so the sheet for an
 order period can be prepared under a different name, and then renamed to

@@ -1,17 +1,20 @@
 const Sheet = require('./sheet');
 const { indexToColumn } = require('./a1-utils');
 const {
-  SheetNotFoundError,
-  NegativeQuantityError,
-  ProductNotFoundError,
-  QuantityNotAvailableError
+  SheetsError,
+  sheetNotFound,
+  negativeQuantity,
+  productNotFound,
+  quantityNotAvailable
 } = require('./errors');
 
 const sheetName = 'Orders';
 const namesRowIndex = 0;
-const limitsRowIndex = 1;
-const totalsRowIndex = 2;
-const firstUserRowIndex = 3;
+const imagesRowIndex = 1;
+const pricesRowIndex = 2;
+const limitsRowIndex = 3;
+const totalsRowIndex = 4;
+const firstUserRowIndex = 5;
 
 //
 // The orders sheet contains the current week's products and orders. Row 1,
@@ -29,76 +32,81 @@ class OrdersSheet extends Sheet {
 
   // Get the order data for a user. Used both to return to the client to render
   // the products, and to load just before modifying a user's order. Returns
-  // `{ products: [ { [name]: column, available, ordered } ], numUsers, userIndex }`.
+  // `{ products, userRowIndex }`. `userRowIndex` is the 0-based index within
+  // the user rows of the row containing the user's order, or `-1` if the user
+  // does not have an order yet. `products` is a hash whose keys are the
+  // 0-based index of the column containing the product (which we use as
+  // product ids) and whose values are
+  // `{ name, imageUrl, price, available, ordered }`, where:
   // `name` is the name of the product
-  // `column` is the A1-notation of the column containing the product
+  // `imageUrl` is the URL of the product image
+  // `price` is the price of the product
   // `available` is the number of units of the product still available to order
   // `ordered` is the number of units of the product the user has ordered
-  // `numUsers` is the total numbers of rows containing user orders
-  // `userIndex` is the index of the current user in the user rows, or -1
   async getForUser(userId) {
-    let rows;
+    let columns;
     try {
-      rows = await this.getAll({ majorDimension: 'ROWS' });
+      columns = await this.getAll({ majorDimension: 'COLUMNS' });
     } catch (e) {
       if (e.code === 400) {
-        throw new SheetNotFoundError();
+        throw new SheetsError(sheetNotFound);
+      } else {
+        throw e;
       }
-      throw e;
     }
-    let [ , ...names ] = rows[namesRowIndex];
-    let [ , ...limits ] = rows[limitsRowIndex];
-    let [ , ...totals ] = rows[totalsRowIndex];
-    let userRows = rows.slice(firstUserRowIndex);
 
+    // Row 0 contains the user ids for the user order rows.
+    let userRowIndex = columns[0].slice(firstUserRowIndex).indexOf(userId);
     let products = {};
-    names.forEach((name, i) => {
-      products[name] = {
-        column: indexToColumn(i + 1),
-        available: limits[i] - totals[i],
-        ordered: 0
-      };
+    columns.slice(1).forEach((column, i) => {
+      let limit = column[limitsRowIndex];
+      // has to be non-empty and non-zero for product to appear
+      if (limit) {
+        // add one because we're skipping the first column in our iteration
+        let id = i + 1;
+        let product = {
+          name: column[namesRowIndex],
+          imageUrl: column[imagesRowIndex],
+          price: column[pricesRowIndex],
+          available: limit - column[totalsRowIndex]
+        };
+        if (userRowIndex !== -1) {
+          product.ordered = column[firstUserRowIndex + userRowIndex] || 0;
+        } else {
+          product.ordered = 0;
+        }
+        products[id] = product;
+      }
     });
 
-    let userIndex = userRows.findIndex(([ rowUserId ]) => rowUserId === userId);
-    if (userIndex !== -1) {
-      userRows[userIndex].slice(1).forEach((ordered, i) => {
-        products[names[i]].ordered = ordered || 0;
-      });
-    }
-
-    return { products, numUsers: userRows.length, userIndex };
+    return { products, userRowIndex };
   }
 
   // Set the quantity ordered of a product for a user. Must be called with the
-  // spreadsheet's mutex locked
-  async setOrdered(userId, productName, quantity) {
+  // spreadsheet's mutex locked.
+  async setOrdered(userId, productId, quantity) {
     if (quantity < 0) {
-      throw new NegativeQuantityError();
+      throw new SheetsError(negativeQuantity);
     }
 
-    let data = await this.getForUser(userId);
-    let { products, userIndex, numUsers } = data;
-    let product = products[productName];
+    let { products, userRowIndex } = await this.getForUser(userId);
+    let product = products[productId];
     if (!product) {
-      throw new ProductNotFoundError();
+      throw new SheetsError(productNotFound);
     }
 
-    let { column, available, ordered } = product;
+    let { available, ordered } = product;
     if (quantity > available + ordered) {
-      throw new QuantityNotAvailableError();
+      throw new SheetsError(quantityNotAvailable);
     }
 
-    if (userIndex !== -1) {
-      await this.update(`${column}${firstUserRowIndex + userIndex + 1}`, [ quantity ]);
+    if (userRowIndex !== -1) {
+      // Add 1 to row index because the rows in the A1 notation are 1-based
+      await this.update(`${indexToColumn(productId)}${firstUserRowIndex + userRowIndex + 1}`, [ quantity ]);
     } else {
-      let newRowIndex = firstUserRowIndex + numUsers + 1;
-      await this.batchUpdate([
-        { range: `A${newRowIndex}`, values: [ userId ] },
-        { range: `${column}${newRowIndex}`, values: [ quantity ] }
-      ]);
-      data.userIndex = numUsers;
-      data.numUsers += 1;
+      let row = [ userId, ...Object.keys(products).map(() => 0) ];
+      row[productId] = quantity;
+      await this.append('B1', row);
     }
 
     product.available -= (quantity - product.ordered);

@@ -2,7 +2,10 @@ require('./support/setup');
 const { expect } = require('chai');
 const sinon = require('sinon');
 const MutexSheet = require('../src/sheets/mutex-sheet');
-const { SheetLockedError } = require('../src/sheets/errors');
+const {
+  SheetsError,
+  spreadsheetLocked
+} = require('../src/sheets/errors');
 
 describe('MutexSheet', function() {
   let values;
@@ -59,7 +62,7 @@ describe('MutexSheet', function() {
     });
     values.clear = sinon.stub().resolves();
 
-    await expect(sheet.lock('uid')).to.eventually.be.rejectedWith(SheetLockedError);
+    await expect(sheet.lock('uid')).to.eventually.be.rejectedWith(SheetsError, spreadsheetLocked);
     expect(values.append).to.have.been.called;
     expect(values.clear).to.have.callCount(values.append.callCount);
     expect(values.clear).to.have.been.calledWithMatch({

@@ -12,11 +12,11 @@ class Spreadsheet {
     return products;
   }
 
-  async setProductOrdered(userId, productName, quantity) {
+  async setProductOrder(userId, productId, quantity) {
     await this.mutex.lock();
 
     try {
-      return await this.orders.setOrdered(userId, productName, quantity);
+      return await this.orders.setOrdered(userId, productId, quantity);
     } finally {
       this.mutex.unlock();
     }

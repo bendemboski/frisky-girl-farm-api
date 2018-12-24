@@ -1,5 +1,8 @@
 const Sheet = require('./sheet');
-const { SheetLockedError } = require('./errors');
+const {
+  SheetsError,
+  spreadsheetLocked
+} = require('./errors');
 
 const sheetName = 'Mutex';
 const mutexLockedRange = 'A2:B2';
@@ -31,7 +34,7 @@ class MutexSheet extends Sheet {
     let tries = 0;
     while (!await this._tryLock(userId)) {
       if (++tries === maxTries) {
-        throw new SheetLockedError();
+        throw new SheetsError(spreadsheetLocked);
       }
       await sleep(this.retryInterval || retryInterval);
     }
