@@ -17,7 +17,10 @@ To set this up to deploy and run, perform the following steps:
 
 ## Spreadsheet format
 
-The API server looks for two sheets in the spreadsheet, identified by name.
+The API server looks for several sheets in the spreadsheet, identified by name.
+Any other sheets will be ignored.
+
+### Mutex
 
 There must be a sheet named `Mutex` laid out like this:
 
@@ -28,10 +31,30 @@ There must be a sheet named `Mutex` laid out like this:
 This sheet must always be present, and is used internally to ensure concurrent
 writes to the sheet don't corrupt the data.
 
-The other sheet the API server looks for is the one named `Orders`. When this
-sheet is present, it will be used to track orders for a currently open order
-period. When not present, orders are not tracked/allowed. The `Orders` sheet
-must contain three rows. The sheet is laid out like this:
+### Users
+
+There must be a sheet named `Users` laid out like this:
+
+|   | A       | B      | C          | D       | E                  | F
+| 1 | email   | name   | location   | balance | starting balance   | spent
+| 2 | (email) | (name) | (location) | =F2-G2  | (starting balance) | (spent)
+| 3 | (email) | (name) | (location) | =F3-G3  | (starting balance) | (spent)
+| 4 | (email) | (name) | (location) | =F4-G4  | (starting balance) | (spent)
+
+* `email` (string) The user's email
+* `name` (string) The user's name
+* `location` (string) The location where the user is picking up their order
+* `starting balance` (currency) The user's starting balance for the season
+* `spent` (currency) The amount the user has already spent, not including the current order (if any)
+
+Rows `2` - `4` (and beyond) are filled in dynamically by the API.
+
+### Orders
+
+The API server looks for a sheet named `Orders`. When this sheet is present, it
+will be used to track orders for a currently open order period. When not
+present, orders are not tracked/allowed. The `Orders` sheet is laid out like
+this:
 
 |   | A         | B              | C              | D              |
 |---|-----------|----------------|----------------|----------------|
@@ -54,10 +77,10 @@ must contain three rows. The sheet is laid out like this:
 The user order rows (`7` - `9` and beyond) are filled in dynamically by the API
 server.
 
-There can be any number of additional sheets with any name, so the sheet for an
-order period can be prepared under a different name, and then renamed to
-`Orders` to open up ordering for that period. Then when the period is closed,
-the sheet can be renamed to anything to close ordering.
+Since sheets with names not specified here are ignored, the sheet for an order
+period can be prepared under a different name, and then renamed to `Orders` to
+open up ordering for that period. Then when the period is closed, the sheet can
+be renamed to anything to close ordering.
 
 ## Build credentials
 

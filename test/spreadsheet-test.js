@@ -6,7 +6,8 @@ const {
   SheetsError,
   sheetNotFound,
   spreadsheetLocked,
-  quantityNotAvailable
+  quantityNotAvailable,
+  userNotFound
 } = require('../src/sheets/errors');
 
 describe('Spreadsheet', function() {
@@ -18,6 +19,22 @@ describe('Spreadsheet', function() {
     values = {};
 
     values.get = sinon.stub();
+
+    values.get.withArgs({
+      spreadsheetId: 'ssid',
+      range: 'Users',
+      majorDimension: 'ROWS',
+      valueRenderOption: 'UNFORMATTED_VALUE'
+    }).resolves({
+      data: {
+        values: [
+          [ 'email', 'name', 'location', 'balance', 'starting balance', 'spent' ],
+          [ 'ellen@friskygirlfarm.com', 'Ellen Scheffer', 'Lake City', 25.00, 100.00, 75.00 ],
+          [ 'ashley@friskygirlfarm.com', 'Ashley Wilson', 'Wallingford', 45.00, 100.00, 55.00 ]
+        ]
+      }
+    });
+
     getStub = values.get.withArgs({
       spreadsheetId: 'ssid',
       range: 'Orders',
@@ -59,6 +76,21 @@ describe('Spreadsheet', function() {
       }
     });
   }
+
+  describe('getUser', function() {
+    it('works', async function() {
+      expect(await spreadsheet.getUser('ashley@friskygirlfarm.com')).to.deep.equal({
+        email: 'ashley@friskygirlfarm.com',
+        name: 'Ashley Wilson',
+        location: 'Wallingford',
+        balance: 45.00
+      });
+    });
+
+    it('propagates errors', async function() {
+      expect(spreadsheet.getUser('becky@friskygirlfarm.com')).to.eventually.be.rejectedWith(SheetsError, userNotFound);
+    });
+  });
 
   describe('getProducts', function() {
     it('works', async function() {

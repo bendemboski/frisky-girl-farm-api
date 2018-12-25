@@ -1,10 +1,16 @@
+const UsersSheet = require('./users-sheet');
 const MutexSheet = require('./mutex-sheet');
 const OrdersSheet = require('./orders-sheet');
 
 class Spreadsheet {
   constructor({ id, client }) {
+    this.users = new UsersSheet({ client, spreadsheetId: id });
     this.mutex = new MutexSheet({ client, spreadsheetId: id });
     this.orders = new OrdersSheet({ client, spreadsheetId: id });
+  }
+
+  async getUser(userId) {
+    return await this.users.getUser(userId);
   }
 
   async getProducts(userId) {

@@ -12,6 +12,7 @@ const spreadsheetLocked = 'spreadsheetLocked';
 const negativeQuantity = 'negativeQuantity';
 const productNotFound = 'productNotFound';
 const quantityNotAvailable = 'quantityNotAvailable';
+const userNotFound = 'userNotFound';
 
 module.exports = {
   SheetsError,
@@ -19,5 +20,6 @@ module.exports = {
   spreadsheetLocked,
   negativeQuantity,
   productNotFound,
-  quantityNotAvailable
+  quantityNotAvailable,
+  userNotFound
 };
