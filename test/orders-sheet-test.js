@@ -3,35 +3,21 @@ const { expect } = require('chai');
 const sinon = require('sinon');
 const OrdersSheet = require('../src/sheets/orders-sheet');
 const {
-  SheetsError,
-  sheetNotFound,
-  negativeQuantity,
-  productNotFound,
-  quantityNotAvailable
+  OrdersNotOpenError,
+  NegativeQuantityError,
+  ProductNotFoundError,
+  QuantityNotAvailableError
 } = require('../src/sheets/errors');
+const MockSheetsClient = require('./support/mock-sheets-client');
 
 describe('OrdersSheet', function() {
-  let values;
-  let getStub;
+  let client;
   let sheet;
 
   beforeEach(function() {
-    values = {};
-
-    values.get = sinon.stub();
-    getStub = values.get.withArgs({
-      spreadsheetId: 'ssid',
-      range: 'Orders',
-      majorDimension: 'COLUMNS',
-      valueRenderOption: 'UNFORMATTED_VALUE'
-    });
-
+    client = new MockSheetsClient();
     sheet = new OrdersSheet({
-      client: {
-        spreadsheets: {
-          values
-        }
-      },
+      client,
       spreadsheetId: 'ssid'
     });
   });
@@ -40,29 +26,9 @@ describe('OrdersSheet', function() {
     sinon.restore();
   });
 
-  function setOrders(totals, ...users) {
-    let ordered = [ 0, 0, 0 ];
-    users.forEach((orders) => {
-      ordered[0] += orders[1] || 0;
-      ordered[1] += orders[2] || 0;
-      ordered[2] += orders[3] || 0;
-    });
-
-    getStub.resolves({
-      data: {
-        values: [
-          [ '', 'image', 'price', 'total', 'ordered', ...users.map((u) => u[0]) ],
-          [ 'Lettuce', 'http://lettuce.com/image.jpg', 0.15, totals[0], ordered[0], ...users.map((u) => u[1]) ],
-          [ 'Kale', 'http://kale.com/image.jpg', 0.85, totals[1], ordered[1], ...users.map((u) => u[2]) ],
-          [ 'Spicy Greens', 'http://spicy-greens.com/image.jpg', 15.00, totals[2], ordered[2], ...users.map((u) => u[3]) ]
-        ]
-      }
-    });
-  }
-
   describe('getForUser', function() {
     it('includes name, image URL and price', async function() {
-      setOrders(
+      client.setOrders(
         [ 1, 1, 1 ]
       );
 
@@ -82,7 +48,7 @@ describe('OrdersSheet', function() {
     });
 
     it('omits products with a limit of 0', async function() {
-      setOrders(
+      client.setOrders(
         [ 1, 0, 1 ]
       );
 
@@ -95,7 +61,7 @@ describe('OrdersSheet', function() {
     });
 
     it('works with no users', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 5 ]
       );
 
@@ -111,7 +77,7 @@ describe('OrdersSheet', function() {
     });
 
     it('works when the user has no row', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 5 ],
         [ 'uid1', 4, 0, 1 ],
         [ 'uid2', 3, 2, 2 ]
@@ -129,7 +95,7 @@ describe('OrdersSheet', function() {
     });
 
     it('works when the user has a row', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 5 ],
         [ 'uid', 4, 0, 1 ],
         [ 'uid2', 3, 2, 2 ]
@@ -147,7 +113,7 @@ describe('OrdersSheet', function() {
     });
 
     it('works with blank user cells', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 5 ],
         [ 'uid', 4, '', 1 ],
         [ 'uid2', 3, 2, '' ]
@@ -165,31 +131,23 @@ describe('OrdersSheet', function() {
     });
 
     it('fails if there is no orders sheet', async function() {
-      getStub.resetBehavior();
-      getStub.rejects({ code: 400 });
-
-      await expect(sheet.getForUser('uid')).to.eventually.be.rejectedWith(SheetsError, sheetNotFound);
+      client.setNoOrders();
+      await expect(sheet.getForUser('uid')).to.eventually.be.rejectedWith(OrdersNotOpenError);
     });
   });
 
   describe('setOrdered', function() {
     beforeEach(function() {
-      values.update = sinon.stub().resolves();
-      values.batchUpdate = sinon.stub().resolves();
+      client.stubSetOrder();
     });
 
     it('works when the user has no row', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 5 ],
         [ 'uid1', 4, 0, 1 ],
         [ 'uid2', 3, 2, 0 ]
       );
-
-      values.append = sinon.stub();
-      values.append.withArgs(sinon.match({
-        spreadsheetId: 'ssid',
-        range: 'Orders!B1'
-      })).resolves({ data: { updates: { updatedRange: 'Orders!A8:D8' } } });
+      client.stubAppendOrder();
 
       let ret = await sheet.setOrdered('uid', 3, 2);
       expect(ret).to.deep.nested.include({
@@ -201,7 +159,7 @@ describe('OrdersSheet', function() {
         '3.ordered': 2
       });
 
-      expect(values.append).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.append).to.have.been.calledOnceWith({
         spreadsheetId: 'ssid',
         range: 'Orders!B1',
         requestBody: { values: [ 'uid', 0, 0, 2 ] }
@@ -209,7 +167,7 @@ describe('OrdersSheet', function() {
     });
 
     it('works when the user has a row', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 5 ],
         [ 'uid1', 4, 0, 1 ],
         [ 'uid', 3, 0, 0 ]
@@ -225,7 +183,7 @@ describe('OrdersSheet', function() {
         '3.ordered': 2
       });
 
-      expect(values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
         requestBody: { values: [ 2 ] }
@@ -233,7 +191,7 @@ describe('OrdersSheet', function() {
     });
 
     it('works for increasing the quantity of a product', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 1 ],
         [ 'uid', 3, 0, 1 ]
@@ -249,7 +207,7 @@ describe('OrdersSheet', function() {
         '3.ordered': 3
       });
 
-      expect(values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
         requestBody: { values: [ 3 ] }
@@ -257,7 +215,7 @@ describe('OrdersSheet', function() {
     });
 
     it('works for decreasing the quantity of a product', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 1 ],
         [ 'uid', 3, 0, 3 ]
@@ -273,7 +231,7 @@ describe('OrdersSheet', function() {
         '3.ordered': 2
       });
 
-      expect(values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
         requestBody: { values: [ 2 ] }
@@ -281,7 +239,7 @@ describe('OrdersSheet', function() {
     });
 
     it('works for zeroing out the quantity of a product', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 1 ],
         [ 'uid', 3, 0, 3 ]
@@ -297,7 +255,7 @@ describe('OrdersSheet', function() {
         '3.ordered': 0
       });
 
-      expect(values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
         requestBody: { values: [ 0 ] }
@@ -305,7 +263,7 @@ describe('OrdersSheet', function() {
     });
 
     it('works if the order consumes all remaining availability', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 1 ],
         [ 'uid', 3, 0, 0 ]
@@ -321,7 +279,7 @@ describe('OrdersSheet', function() {
         '3.ordered': 5
       });
 
-      expect(values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
         requestBody: { values: [ 5 ] }
@@ -329,7 +287,7 @@ describe('OrdersSheet', function() {
     });
 
     it('accounts for the current ordered quantity when checking availability', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 1 ],
         [ 'uid', 3, 0, 3 ]
@@ -345,7 +303,7 @@ describe('OrdersSheet', function() {
         '3.ordered': 4
       });
 
-      expect(values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
         requestBody: { values: [ 4 ] }
@@ -353,35 +311,31 @@ describe('OrdersSheet', function() {
     });
 
     it('fails on a negative quantity or unknown product', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 5 ],
         [ 'uid1', 4, 0, 1 ],
         [ 'uid', 3, 0, 0 ]
       );
 
-      await expect(sheet.setOrdered('uid', 3, -2)).to.eventually.be.rejectedWith(SheetsError, negativeQuantity);
-      await expect(sheet.setOrdered('uid', 7, 3)).to.eventually.be.rejectedWith(SheetsError, productNotFound);
-      expect(values.update).to.not.have.been.called;
-      expect(values.batchUpdate).to.not.have.been.called;
+      await expect(sheet.setOrdered('uid', 3, -2)).to.eventually.be.rejectedWith(NegativeQuantityError);
+      await expect(sheet.setOrdered('uid', 7, 3)).to.eventually.be.rejectedWith(ProductNotFoundError);
+      expect(client.spreadsheets.values.update).to.not.have.been.called;
     });
 
     it('fails if the order exceeds the availability', async function() {
-      setOrders(
+      client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 2 ],
         [ 'uid', 3, 0, 3 ]
       );
 
-      await expect(sheet.setOrdered('uid', 3, 5)).to.eventually.be.rejectedWith(SheetsError, quantityNotAvailable);
-      expect(values.update).to.not.have.been.called;
-      expect(values.batchUpdate).to.not.have.been.called;
+      await expect(sheet.setOrdered('uid', 3, 5)).to.eventually.be.rejectedWith(QuantityNotAvailableError);
+      expect(client.spreadsheets.values.update).to.not.have.been.called;
     });
 
     it('fails if there is no orders sheet', async function() {
-      getStub.resetBehavior();
-      getStub.rejects({ code: 400 });
-
-      await expect(sheet.setOrdered('uid', 3, 3)).to.eventually.be.rejectedWith(SheetsError, sheetNotFound);
+      client.setNoOrders();
+      await expect(sheet.setOrdered('uid', 3, 3)).to.eventually.be.rejectedWith(OrdersNotOpenError);
     });
   });
 });

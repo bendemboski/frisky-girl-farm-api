@@ -2,24 +2,18 @@ require('./support/setup');
 const { expect } = require('chai');
 const sinon = require('sinon');
 const MutexSheet = require('../src/sheets/mutex-sheet');
-const {
-  SheetsError,
-  spreadsheetLocked
-} = require('../src/sheets/errors');
+const { SpreadsheetLockedError } = require('../src/sheets/errors');
+const MockSheetsClient = require('./support/mock-sheets-client');
 
 describe('MutexSheet', function() {
-  let values;
+  let client;
   let sheet;
 
   beforeEach(function() {
-    values = {};
+    client = new MockSheetsClient();
 
     sheet = new MutexSheet({
-      client: {
-        spreadsheets: {
-          values
-        }
-      },
+      client,
       spreadsheetId: 'ssid'
     });
     sheet.retryInterval = 10;
@@ -30,20 +24,14 @@ describe('MutexSheet', function() {
   });
 
   it('locks when the sheet is empty', async function() {
-    values.append = sinon.stub().resolves({
-      data: {
-        updates: {
-          updatedRange: 'Mutex!A2:B2'
-        }
-      }
-    });
+    client.setMutexUnlocked();
 
     let now = new Date();
     sinon.useFakeTimers(now);
 
     await expect(sheet.lock('uid')).to.eventually.be.fulfilled;
-    expect(values.append).to.have.been.calledOnce;
-    expect(values.append).to.have.been.calledWithMatch({
+    expect(client.spreadsheets.values.append).to.have.been.calledOnce;
+    expect(client.spreadsheets.values.append).to.have.been.calledWithMatch({
       spreadsheetId: 'ssid',
       range: 'Mutex!A1',
       requestBody: {
@@ -53,58 +41,51 @@ describe('MutexSheet', function() {
   });
 
   it('it does not lock when the sheet is not empty', async function() {
-    values.append = sinon.stub().resolves({
-      data: {
-        updates: {
-          updatedRange: 'Mutex!A3:B3'
-        }
-      }
-    });
-    values.clear = sinon.stub().resolves();
+    client.setMutexLocked();
 
-    await expect(sheet.lock('uid')).to.eventually.be.rejectedWith(SheetsError, spreadsheetLocked);
-    expect(values.append).to.have.been.called;
-    expect(values.clear).to.have.callCount(values.append.callCount);
-    expect(values.clear).to.have.been.calledWithMatch({
+    await expect(sheet.lock('uid')).to.eventually.be.rejectedWith(SpreadsheetLockedError);
+    expect(client.spreadsheets.values.append).to.have.been.called;
+    expect(client.spreadsheets.values.clear).to.have.callCount(client.spreadsheets.values.append.callCount);
+    expect(client.spreadsheets.values.clear).to.have.been.calledWithMatch({
       spreadsheetId: 'ssid',
       range: 'Mutex!A3:B3'
     });
   });
 
   it('it locks when the lock is released during the lock operation', async function() {
-    values.append = sinon.stub();
-    values.append.onFirstCall().resolves({
+    client.spreadsheets.values.append = client.spreadsheets.values.append || sinon.stub();
+    client.spreadsheets.values.append.onFirstCall().resolves({
       data: {
         updates: {
           updatedRange: 'Mutex!A3:B3'
         }
       }
     });
-    values.append.onSecondCall().resolves({
+    client.spreadsheets.values.append.onSecondCall().resolves({
       data: {
         updates: {
           updatedRange: 'Mutex!A2:B2'
         }
       }
     });
-    values.clear = sinon.stub().resolves();
+    client.spreadsheets.values.clear = client.spreadsheets.values.clear || sinon.stub();
 
     await expect(sheet.lock('uid')).to.eventually.be.fulfilled;
-    expect(values.append).to.have.been.calledTwice;
-    expect(values.clear).to.have.been.calledOnce;
-    expect(values.append.secondCall).to.have.been.calledWithMatch({
+    expect(client.spreadsheets.values.append).to.have.been.calledTwice;
+    expect(client.spreadsheets.values.clear).to.have.been.calledOnce;
+    expect(client.spreadsheets.values.append.secondCall).to.have.been.calledWithMatch({
       spreadsheetId: 'ssid',
       range: 'Mutex!A1',
       requestBody: { values: sinon.match.array.startsWith([ 'uid' ]) }
     });
   });
 
-  it('releases', async function() {
-    values.clear = sinon.stub().resolves();
+  it('unlocks', async function() {
+    client.stubUnlockMutex();
 
     await expect(sheet.unlock('uid')).to.eventually.be.fulfilled;
-    expect(values.clear).to.have.been.calledOnce;
-    expect(values.clear.firstCall).to.have.been.calledWithMatch({
+    expect(client.spreadsheets.values.clear).to.have.been.calledOnce;
+    expect(client.spreadsheets.values.clear.firstCall).to.have.been.calledWithMatch({
       spreadsheetId: 'ssid',
       range: 'Mutex!A2:B2'
     });

@@ -45,24 +45,6 @@ class Sheet {
     });
   }
 
-  async batchUpdate(updates) {
-    await this._values.batchUpdate({
-      spreadsheetId: this.spreadsheetId,
-      requestBody: {
-        data: updates.map(({ range, majorDimension, values }) => {
-          let ret = {
-            range: this._range(range),
-            values
-          };
-          if (majorDimension) {
-            ret.majorDimension = majorDimension;
-          }
-          return ret;
-        })
-      }
-    });
-  }
-
   async clear(range) {
     await this._values.clear({
       spreadsheetId: this.spreadsheetId,

@@ -3,51 +3,29 @@ const { expect } = require('chai');
 const sinon = require('sinon');
 const Spreadsheet = require('../src/sheets/spreadsheet');
 const {
-  SheetsError,
-  sheetNotFound,
-  spreadsheetLocked,
-  quantityNotAvailable,
-  userNotFound
+  OrdersNotOpenError,
+  SpreadsheetLockedError,
+  QuantityNotAvailableError,
+  UserNotFoundError
 } = require('../src/sheets/errors');
+const MockSheetsClient = require('./support/mock-sheets-client');
 
 describe('Spreadsheet', function() {
-  let values;
-  let getStub;
+  let client;
   let spreadsheet;
 
   beforeEach(function() {
-    values = {};
+    client = new MockSheetsClient();
 
-    values.get = sinon.stub();
-
-    values.get.withArgs({
-      spreadsheetId: 'ssid',
-      range: 'Users',
-      majorDimension: 'ROWS',
-      valueRenderOption: 'UNFORMATTED_VALUE'
-    }).resolves({
-      data: {
-        values: [
-          [ 'email', 'name', 'location', 'balance', 'starting balance', 'spent' ],
-          [ 'ellen@friskygirlfarm.com', 'Ellen Scheffer', 'Lake City', 25.00, 100.00, 75.00 ],
-          [ 'ashley@friskygirlfarm.com', 'Ashley Wilson', 'Wallingford', 45.00, 100.00, 55.00 ]
-        ]
-      }
-    });
-
-    getStub = values.get.withArgs({
-      spreadsheetId: 'ssid',
-      range: 'Orders',
-      majorDimension: 'COLUMNS',
-      valueRenderOption: 'UNFORMATTED_VALUE'
-    });
+    client.setUsers();
+    client.setOrders(
+      [ 7, 3, 5 ],
+      [ 'uid1', 4, 0, 1 ],
+      [ 'uid', 3, 2, 0 ]
+    );
 
     spreadsheet = new Spreadsheet({
-      client: {
-        spreadsheets: {
-          values
-        }
-      },
+      client,
       id: 'ssid'
     });
     spreadsheet.mutex.retryInterval = 10;
@@ -56,26 +34,6 @@ describe('Spreadsheet', function() {
   afterEach(function() {
     sinon.restore();
   });
-
-  function setOrders(totals, ...users) {
-    let ordered = [ 0, 0, 0 ];
-    users.forEach((orders) => {
-      ordered[0] += orders[1] || 0;
-      ordered[1] += orders[2] || 0;
-      ordered[2] += orders[3] || 0;
-    });
-
-    getStub.resolves({
-      data: {
-        values: [
-          [ '', 'image', 'price', 'total', 'ordered', ...users.map((u) => u[0]) ],
-          [ 'Lettuce', 'http://lettuce.com/image.jpg', 0.15, totals[0], ordered[0], ...users.map((u) => u[1]) ],
-          [ 'Kale', 'http://kale.com/image.jpg', 0.85, totals[1], ordered[1], ...users.map((u) => u[2]) ],
-          [ 'Spicy Greens', 'http://spicy-greens.com/image.jpg', 15.00, totals[2], ordered[2], ...users.map((u) => u[3]) ]
-        ]
-      }
-    });
-  }
 
   describe('getUser', function() {
     it('works', async function() {
@@ -88,18 +46,12 @@ describe('Spreadsheet', function() {
     });
 
     it('propagates errors', async function() {
-      expect(spreadsheet.getUser('becky@friskygirlfarm.com')).to.eventually.be.rejectedWith(SheetsError, userNotFound);
+      expect(spreadsheet.getUser('becky@friskygirlfarm.com')).to.eventually.be.rejectedWith(UserNotFoundError);
     });
   });
 
   describe('getProducts', function() {
     it('works', async function() {
-      setOrders(
-        [ 7, 3, 5 ],
-        [ 'uid1', 4, 0, 1 ],
-        [ 'uid', 3, 2, 0 ]
-      );
-
       let ret = await spreadsheet.getProducts('uid');
       expect(ret).to.deep.nested.include({
         '1.name': 'Lettuce',
@@ -121,41 +73,15 @@ describe('Spreadsheet', function() {
     });
 
     it('propagates errors', async function() {
-      values.get.resetBehavior();
-      values.get.rejects({ code: 400 });
-
-      await expect(spreadsheet.getProducts('uid')).to.eventually.be.rejectedWith(SheetsError, sheetNotFound);
+      client.setNoOrders();
+      await expect(spreadsheet.getProducts('uid')).to.eventually.be.rejectedWith(OrdersNotOpenError);
     });
   });
 
   describe('setProductOrder', function() {
-    beforeEach(function() {
-      values.append = sinon.stub().withArgs({
-        spreadsheetId: 'ssid',
-        range: 'Mutex!A1',
-        requestBody: { values: sinon.match.array.startsWith([ 'uid' ]) }
-      }).resolves({
-        data: {
-          updates: {
-            updatedRange: 'Mutex!A2:B2'
-          }
-        }
-      });
-
-      values.clear = sinon.stub().withArgs({
-        spreadsheetId: 'ssid',
-        range: 'Mutex!A3:B3'
-      }).resolves();
-
-      values.update = sinon.stub().resolves();
-    });
-
     it('works and locks the mutex', async function() {
-      setOrders(
-        [ 7, 3, 5 ],
-        [ 'uid2', 4, 0, 1 ],
-        [ 'uid', 3, 2, 0 ]
-      );
+      client.setMutexUnlocked();
+      client.stubSetOrder();
 
       let ret = await spreadsheet.setProductOrder('uid', 3, 3);
       expect(ret).to.deep.nested.include({
@@ -166,37 +92,25 @@ describe('Spreadsheet', function() {
         '3.available': 1,
         '3.ordered': 3
       });
-      expect(values.append).to.have.been.calledOnce;
-      expect(values.clear).to.have.been.calledOnce;
-      expect(values.update).to.have.been.calledAfter(values.append);
-      expect(values.update).to.have.been.calledBefore(values.clear);
+      expect(client.spreadsheets.values.append).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.clear).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.update).to.have.been.calledAfter(client.spreadsheets.values.append);
+      expect(client.spreadsheets.values.update).to.have.been.calledBefore(client.spreadsheets.values.clear);
     });
 
     it('fails if it cannot lock the mutex', async function() {
-      values.append.resetBehavior();
-      values.append.resolves({
-        data: {
-          updates: {
-            updatedRange: 'Mutex!A3:B3'
-          }
-        }
-      });
-
-      await expect(spreadsheet.setProductOrder('uid', 3, 3)).to.be.rejectedWith(SheetsError, spreadsheetLocked);
+      client.setMutexLocked();
+      await expect(spreadsheet.setProductOrder('uid', 3, 3)).to.be.rejectedWith(SpreadsheetLockedError);
     });
 
     it('propagates errors', async function() {
-      setOrders(
-        [ 7, 3, 5 ],
-        [ 'uid', 4, 0, 1 ],
-        [ 'uid2', 3, 2, 0 ]
-      );
-      await expect(spreadsheet.setProductOrder('uid', 3, 6)).to.be.rejectedWith(SheetsError, quantityNotAvailable);
+      client.setMutexUnlocked();
+      await expect(spreadsheet.setProductOrder('uid', 3, 6)).to.be.rejectedWith(QuantityNotAvailableError);
 
-      values.get.resetBehavior();
-      values.get.rejects({ code: 400 });
+      client.resetOrders();
+      client.setNoOrders();
 
-      await expect(spreadsheet.setProductOrder('uid', 3, 1)).to.eventually.be.rejectedWith(SheetsError, sheetNotFound);
+      await expect(spreadsheet.setProductOrder('uid', 3, 1)).to.eventually.be.rejectedWith(OrdersNotOpenError);
     });
   });
 });

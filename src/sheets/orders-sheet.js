@@ -1,11 +1,10 @@
 const Sheet = require('./sheet');
 const { indexToColumn } = require('./a1-utils');
 const {
-  SheetsError,
-  sheetNotFound,
-  negativeQuantity,
-  productNotFound,
-  quantityNotAvailable
+  OrdersNotOpenError,
+  NegativeQuantityError,
+  ProductNotFoundError,
+  QuantityNotAvailableError
 } = require('./errors');
 
 const sheetName = 'Orders';
@@ -49,7 +48,7 @@ class OrdersSheet extends Sheet {
       columns = await this.getAll({ majorDimension: 'COLUMNS' });
     } catch (e) {
       if (e.code === 400) {
-        throw new SheetsError(sheetNotFound);
+        throw new OrdersNotOpenError();
       } else {
         throw e;
       }
@@ -86,18 +85,18 @@ class OrdersSheet extends Sheet {
   // spreadsheet's mutex locked.
   async setOrdered(userId, productId, quantity) {
     if (quantity < 0) {
-      throw new SheetsError(negativeQuantity);
+      throw new NegativeQuantityError();
     }
 
     let { products, userRowIndex } = await this.getForUser(userId);
     let product = products[productId];
     if (!product) {
-      throw new SheetsError(productNotFound);
+      throw new ProductNotFoundError();
     }
 
     let { available, ordered } = product;
     if (quantity > available + ordered) {
-      throw new SheetsError(quantityNotAvailable);
+      throw new QuantityNotAvailableError();
     }
 
     if (userRowIndex !== -1) {
