@@ -21,7 +21,8 @@ describe('Spreadsheet', function() {
     getStub = values.get.withArgs({
       spreadsheetId: 'ssid',
       range: 'Orders',
-      majorDimension: 'COLUMNS'
+      majorDimension: 'COLUMNS',
+      valueRenderOption: 'UNFORMATTED_VALUE'
     });
 
     spreadsheet = new Spreadsheet({

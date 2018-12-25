@@ -12,15 +12,8 @@ class Sheet {
     let { data: { values } } = await this._values.get({
       spreadsheetId: this.spreadsheetId,
       range: this.sheetName,
-      majorDimension
-    });
-    return values;
-  }
-
-  async getRange(range) {
-    let { data: { values } } = await this._values.get({
-      spreadsheetId: this.spreadsheetId,
-      range: this._range(range)
+      majorDimension,
+      valueRenderOption: 'UNFORMATTED_VALUE'
     });
     return values;
   }
