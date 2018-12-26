@@ -6,7 +6,7 @@ const {
   OrdersNotOpenError,
   SpreadsheetLockedError,
   QuantityNotAvailableError,
-  UserNotFoundError
+  UnknownUserError
 } = require('../src/sheets/errors');
 const MockSheetsClient = require('./support/mock-sheets-client');
 
@@ -20,8 +20,8 @@ describe('Spreadsheet', function() {
     client.setUsers();
     client.setOrders(
       [ 7, 3, 5 ],
-      [ 'uid1', 4, 0, 1 ],
-      [ 'uid', 3, 2, 0 ]
+      [ 'ellen@friskygirlfarm.com', 4, 0, 1 ],
+      [ 'ashley@friskygirlfarm.com', 3, 2, 0 ]
     );
 
     spreadsheet = new Spreadsheet({
@@ -46,13 +46,13 @@ describe('Spreadsheet', function() {
     });
 
     it('propagates errors', async function() {
-      expect(spreadsheet.getUser('becky@friskygirlfarm.com')).to.eventually.be.rejectedWith(UserNotFoundError);
+      expect(spreadsheet.getUser('becky@friskygirlfarm.com')).to.eventually.be.rejectedWith(UnknownUserError);
     });
   });
 
   describe('getProducts', function() {
     it('works', async function() {
-      let ret = await spreadsheet.getProducts('uid');
+      let ret = await spreadsheet.getProducts('ashley@friskygirlfarm.com');
       expect(ret).to.deep.nested.include({
         '1.name': 'Lettuce',
         '1.imageUrl': 'http://lettuce.com/image.jpg',
@@ -74,16 +74,16 @@ describe('Spreadsheet', function() {
 
     it('propagates errors', async function() {
       client.setNoOrders();
-      await expect(spreadsheet.getProducts('uid')).to.eventually.be.rejectedWith(OrdersNotOpenError);
+      await expect(spreadsheet.getProducts('ashley@friskygirlfarm.com')).to.eventually.be.rejectedWith(OrdersNotOpenError);
     });
   });
 
   describe('setProductOrder', function() {
     it('works and locks the mutex', async function() {
       client.setMutexUnlocked();
-      client.stubSetOrder();
+      client.stubUpdateOrder();
 
-      let ret = await spreadsheet.setProductOrder('uid', 3, 3);
+      let ret = await spreadsheet.setProductOrder('ashley@friskygirlfarm.com', 3, 3);
       expect(ret).to.deep.nested.include({
         '1.available': 0,
         '1.ordered': 3,
@@ -100,17 +100,17 @@ describe('Spreadsheet', function() {
 
     it('fails if it cannot lock the mutex', async function() {
       client.setMutexLocked();
-      await expect(spreadsheet.setProductOrder('uid', 3, 3)).to.be.rejectedWith(SpreadsheetLockedError);
+      await expect(spreadsheet.setProductOrder('ashley@friskygirlfarm.com', 3, 3)).to.be.rejectedWith(SpreadsheetLockedError);
     });
 
     it('propagates errors', async function() {
       client.setMutexUnlocked();
-      await expect(spreadsheet.setProductOrder('uid', 3, 6)).to.be.rejectedWith(QuantityNotAvailableError);
+      await expect(spreadsheet.setProductOrder('ashley@friskygirlfarm.com', 3, 6)).to.be.rejectedWith(QuantityNotAvailableError);
 
       client.resetOrders();
       client.setNoOrders();
 
-      await expect(spreadsheet.setProductOrder('uid', 3, 1)).to.eventually.be.rejectedWith(OrdersNotOpenError);
+      await expect(spreadsheet.setProductOrder('ashley@friskygirlfarm.com', 3, 1)).to.eventually.be.rejectedWith(OrdersNotOpenError);
     });
   });
 });

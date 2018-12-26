@@ -32,7 +32,7 @@ describe('OrdersSheet', function() {
         [ 1, 1, 1 ]
       );
 
-      let ret = await sheet.getForUser('uid');
+      let ret = await sheet.getForUser('ashley@friskygirlfarm.com');
       expect(ret.products).to.have.keys('1', '2', '3');
       expect(ret).to.deep.nested.include({
         'products.1.name': 'Lettuce',
@@ -52,7 +52,7 @@ describe('OrdersSheet', function() {
         [ 1, 0, 1 ]
       );
 
-      let ret = await sheet.getForUser('uid');
+      let ret = await sheet.getForUser('ashley@friskygirlfarm.com');
       expect(ret.products).to.have.keys('1', '3');
       expect(ret).to.deep.nested.include({
         'products.1.name': 'Lettuce',
@@ -65,7 +65,7 @@ describe('OrdersSheet', function() {
         [ 7, 3, 5 ]
       );
 
-      let ret = await sheet.getForUser('uid');
+      let ret = await sheet.getForUser('ashley@friskygirlfarm.com');
       expect(ret).to.deep.nested.include({
         'products.1.available': 7,
         'products.1.ordered': 0,
@@ -80,10 +80,10 @@ describe('OrdersSheet', function() {
       client.setOrders(
         [ 7, 3, 5 ],
         [ 'uid1', 4, 0, 1 ],
-        [ 'uid2', 3, 2, 2 ]
+        [ 'ellen@friskygirlfarm.com', 3, 2, 2 ]
       );
 
-      let ret = await sheet.getForUser('uid');
+      let ret = await sheet.getForUser('ashley@friskygirlfarm.com');
       expect(ret).to.deep.nested.include({
         'products.1.available': 0,
         'products.1.ordered': 0,
@@ -97,11 +97,11 @@ describe('OrdersSheet', function() {
     it('works when the user has a row', async function() {
       client.setOrders(
         [ 7, 3, 5 ],
-        [ 'uid', 4, 0, 1 ],
-        [ 'uid2', 3, 2, 2 ]
+        [ 'ashley@friskygirlfarm.com', 4, 0, 1 ],
+        [ 'ellen@friskygirlfarm.com', 3, 2, 2 ]
       );
 
-      let ret = await sheet.getForUser('uid');
+      let ret = await sheet.getForUser('ashley@friskygirlfarm.com');
       expect(ret).to.deep.nested.include({
         'products.1.available': 0,
         'products.1.ordered': 4,
@@ -115,11 +115,11 @@ describe('OrdersSheet', function() {
     it('works with blank user cells', async function() {
       client.setOrders(
         [ 7, 3, 5 ],
-        [ 'uid', 4, '', 1 ],
-        [ 'uid2', 3, 2, '' ]
+        [ 'ashley@friskygirlfarm.com', 4, '', 1 ],
+        [ 'ellen@friskygirlfarm.com', 3, 2, '' ]
       );
 
-      let ret = await sheet.getForUser('uid');
+      let ret = await sheet.getForUser('ashley@friskygirlfarm.com');
       expect(ret).to.deep.nested.include({
         'products.1.available': 0,
         'products.1.ordered': 4,
@@ -132,24 +132,24 @@ describe('OrdersSheet', function() {
 
     it('fails if there is no orders sheet', async function() {
       client.setNoOrders();
-      await expect(sheet.getForUser('uid')).to.eventually.be.rejectedWith(OrdersNotOpenError);
+      await expect(sheet.getForUser('ashley@friskygirlfarm.com')).to.eventually.be.rejectedWith(OrdersNotOpenError);
     });
   });
 
   describe('setOrdered', function() {
     beforeEach(function() {
-      client.stubSetOrder();
+      client.stubUpdateOrder();
     });
 
     it('works when the user has no row', async function() {
       client.setOrders(
         [ 7, 3, 5 ],
         [ 'uid1', 4, 0, 1 ],
-        [ 'uid2', 3, 2, 0 ]
+        [ 'ellen@friskygirlfarm.com', 3, 2, 0 ]
       );
       client.stubAppendOrder();
 
-      let ret = await sheet.setOrdered('uid', 3, 2);
+      let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 2);
       expect(ret).to.deep.nested.include({
         '1.available': 0,
         '1.ordered': 0,
@@ -162,7 +162,7 @@ describe('OrdersSheet', function() {
       expect(client.spreadsheets.values.append).to.have.been.calledOnceWith({
         spreadsheetId: 'ssid',
         range: 'Orders!B1',
-        requestBody: { values: [ 'uid', 0, 0, 2 ] }
+        requestBody: { values: [ 'ashley@friskygirlfarm.com', 0, 0, 2 ] }
       });
     });
 
@@ -170,10 +170,10 @@ describe('OrdersSheet', function() {
       client.setOrders(
         [ 7, 3, 5 ],
         [ 'uid1', 4, 0, 1 ],
-        [ 'uid', 3, 0, 0 ]
+        [ 'ashley@friskygirlfarm.com', 3, 0, 0 ]
       );
 
-      let ret = await sheet.setOrdered('uid', 3, 2);
+      let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 2);
       expect(ret).to.deep.nested.include({
         '1.available': 0,
         '1.ordered': 3,
@@ -194,10 +194,10 @@ describe('OrdersSheet', function() {
       client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 1 ],
-        [ 'uid', 3, 0, 1 ]
+        [ 'ashley@friskygirlfarm.com', 3, 0, 1 ]
       );
 
-      let ret = await sheet.setOrdered('uid', 3, 3);
+      let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 3);
       expect(ret).to.deep.nested.include({
         '1.available': 0,
         '1.ordered': 3,
@@ -218,10 +218,10 @@ describe('OrdersSheet', function() {
       client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 1 ],
-        [ 'uid', 3, 0, 3 ]
+        [ 'ashley@friskygirlfarm.com', 3, 0, 3 ]
       );
 
-      let ret = await sheet.setOrdered('uid', 3, 2);
+      let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 2);
       expect(ret).to.deep.nested.include({
         '1.available': 0,
         '1.ordered': 3,
@@ -242,10 +242,10 @@ describe('OrdersSheet', function() {
       client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 1 ],
-        [ 'uid', 3, 0, 3 ]
+        [ 'ashley@friskygirlfarm.com', 3, 0, 3 ]
       );
 
-      let ret = await sheet.setOrdered('uid', 3, 0);
+      let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 0);
       expect(ret).to.deep.nested.include({
         '1.available': 0,
         '1.ordered': 3,
@@ -266,10 +266,10 @@ describe('OrdersSheet', function() {
       client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 1 ],
-        [ 'uid', 3, 0, 0 ]
+        [ 'ashley@friskygirlfarm.com', 3, 0, 0 ]
       );
 
-      let ret = await sheet.setOrdered('uid', 3, 5);
+      let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 5);
       expect(ret).to.deep.nested.include({
         '1.available': 0,
         '1.ordered': 3,
@@ -290,10 +290,10 @@ describe('OrdersSheet', function() {
       client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 1 ],
-        [ 'uid', 3, 0, 3 ]
+        [ 'ashley@friskygirlfarm.com', 3, 0, 3 ]
       );
 
-      let ret = await sheet.setOrdered('uid', 3, 4);
+      let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 4);
       expect(ret).to.deep.nested.include({
         '1.available': 0,
         '1.ordered': 3,
@@ -314,11 +314,22 @@ describe('OrdersSheet', function() {
       client.setOrders(
         [ 7, 3, 5 ],
         [ 'uid1', 4, 0, 1 ],
-        [ 'uid', 3, 0, 0 ]
+        [ 'ashley@friskygirlfarm.com', 3, 0, 0 ]
       );
 
-      await expect(sheet.setOrdered('uid', 3, -2)).to.eventually.be.rejectedWith(NegativeQuantityError);
-      await expect(sheet.setOrdered('uid', 7, 3)).to.eventually.be.rejectedWith(ProductNotFoundError);
+      await expect(sheet.setOrdered('ashley@friskygirlfarm.com', 3, -2)).to.eventually.be.rejectedWith(NegativeQuantityError);
+      await expect(sheet.setOrdered('ashley@friskygirlfarm.com', 7, 3)).to.eventually.be.rejectedWith(ProductNotFoundError);
+      expect(client.spreadsheets.values.update).to.not.have.been.called;
+    });
+
+    it('fails if the product is disabled', async function() {
+      client.setOrders(
+        [ 7, 3, 0 ],
+        [ 'uid1', 4, 0, 0 ],
+        [ 'ashley@friskygirlfarm.com', 3, 0, 0 ]
+      );
+
+      await expect(sheet.setOrdered('ashley@friskygirlfarm.com', 3, 1)).to.eventually.be.rejectedWith(ProductNotFoundError);
       expect(client.spreadsheets.values.update).to.not.have.been.called;
     });
 
@@ -326,16 +337,16 @@ describe('OrdersSheet', function() {
       client.setOrders(
         [ 7, 3, 6 ],
         [ 'uid1', 4, 0, 2 ],
-        [ 'uid', 3, 0, 3 ]
+        [ 'ashley@friskygirlfarm.com', 3, 0, 3 ]
       );
 
-      await expect(sheet.setOrdered('uid', 3, 5)).to.eventually.be.rejectedWith(QuantityNotAvailableError);
+      await expect(sheet.setOrdered('ashley@friskygirlfarm.com', 3, 5)).to.eventually.be.rejectedWith(QuantityNotAvailableError);
       expect(client.spreadsheets.values.update).to.not.have.been.called;
     });
 
     it('fails if there is no orders sheet', async function() {
       client.setNoOrders();
-      await expect(sheet.setOrdered('uid', 3, 3)).to.eventually.be.rejectedWith(OrdersNotOpenError);
+      await expect(sheet.setOrdered('ashley@friskygirlfarm.com', 3, 3)).to.eventually.be.rejectedWith(OrdersNotOpenError);
     });
   });
 });

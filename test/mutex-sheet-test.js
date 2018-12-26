@@ -29,13 +29,13 @@ describe('MutexSheet', function() {
     let now = new Date();
     sinon.useFakeTimers(now);
 
-    await expect(sheet.lock('uid')).to.eventually.be.fulfilled;
+    await expect(sheet.lock('ashley@friskygirlfarm.com')).to.eventually.be.fulfilled;
     expect(client.spreadsheets.values.append).to.have.been.calledOnce;
     expect(client.spreadsheets.values.append).to.have.been.calledWithMatch({
       spreadsheetId: 'ssid',
       range: 'Mutex!A1',
       requestBody: {
-        values: [ 'uid', now.toISOString() ]
+        values: [ 'ashley@friskygirlfarm.com', now.toISOString() ]
       }
     });
   });
@@ -43,7 +43,7 @@ describe('MutexSheet', function() {
   it('it does not lock when the sheet is not empty', async function() {
     client.setMutexLocked();
 
-    await expect(sheet.lock('uid')).to.eventually.be.rejectedWith(SpreadsheetLockedError);
+    await expect(sheet.lock('ashley@friskygirlfarm.com')).to.eventually.be.rejectedWith(SpreadsheetLockedError);
     expect(client.spreadsheets.values.append).to.have.been.called;
     expect(client.spreadsheets.values.clear).to.have.callCount(client.spreadsheets.values.append.callCount);
     expect(client.spreadsheets.values.clear).to.have.been.calledWithMatch({
@@ -70,20 +70,20 @@ describe('MutexSheet', function() {
     });
     client.spreadsheets.values.clear = client.spreadsheets.values.clear || sinon.stub();
 
-    await expect(sheet.lock('uid')).to.eventually.be.fulfilled;
+    await expect(sheet.lock('ashley@friskygirlfarm.com')).to.eventually.be.fulfilled;
     expect(client.spreadsheets.values.append).to.have.been.calledTwice;
     expect(client.spreadsheets.values.clear).to.have.been.calledOnce;
     expect(client.spreadsheets.values.append.secondCall).to.have.been.calledWithMatch({
       spreadsheetId: 'ssid',
       range: 'Mutex!A1',
-      requestBody: { values: sinon.match.array.startsWith([ 'uid' ]) }
+      requestBody: { values: sinon.match.array.startsWith([ 'ashley@friskygirlfarm.com' ]) }
     });
   });
 
   it('unlocks', async function() {
     client.stubUnlockMutex();
 
-    await expect(sheet.unlock('uid')).to.eventually.be.fulfilled;
+    await expect(sheet.unlock('ashley@friskygirlfarm.com')).to.eventually.be.fulfilled;
     expect(client.spreadsheets.values.clear).to.have.been.calledOnce;
     expect(client.spreadsheets.values.clear.firstCall).to.have.been.calledWithMatch({
       spreadsheetId: 'ssid',

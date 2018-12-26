@@ -86,7 +86,7 @@ class MockSheetsClient {
     })).resolves({ data: { updates: { updatedRange: 'Orders!A8:D8' } } });
   }
 
-  stubSetOrder() {
+  stubUpdateOrder() {
     this.spreadsheets.values.update = this.spreadsheets.values.update || sinon.stub();
     this.spreadsheets.values.update.withArgs(sinon.match({ range: 'Orders!' })).resolves();
   }

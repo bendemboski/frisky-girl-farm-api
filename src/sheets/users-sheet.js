@@ -1,5 +1,5 @@
 const Sheet = require('./sheet');
-const { UserNotFoundError } = require('./errors');
+const { UnknownUserError } = require('./errors');
 
 const sheetName = 'Users';
 const emailColumnIndex = 0;
@@ -16,7 +16,7 @@ class UsersSheet extends Sheet {
     let [ , ...users ] = await this.getAll({ majorDimension: 'ROWS' });
     let user = users.find((u) => u[emailColumnIndex] === userId);
     if (!user) {
-      throw new UserNotFoundError();
+      throw new UnknownUserError();
     }
 
     return {

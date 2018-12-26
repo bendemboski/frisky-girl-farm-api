@@ -2,7 +2,7 @@ require('./support/setup');
 const { expect } = require('chai');
 const sinon = require('sinon');
 const UsersSheet = require('../src/sheets/users-sheet');
-const { UserNotFoundError } = require('../src/sheets/errors');
+const { UnknownUserError } = require('../src/sheets/errors');
 const MockSheetsClient = require('./support/mock-sheets-client');
 
 describe('UsersSheet', function() {
@@ -34,7 +34,7 @@ describe('UsersSheet', function() {
     });
 
     it('throws when the user is not found', async function() {
-      expect(sheet.getUser('becky@friskygirlfarm.com')).to.eventually.be.rejectedWith(UserNotFoundError);
+      expect(sheet.getUser('becky@friskygirlfarm.com')).to.eventually.be.rejectedWith(UnknownUserError);
     });
   });
 });

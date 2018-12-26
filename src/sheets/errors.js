@@ -18,14 +18,7 @@ const SpreadsheetLockedError = makeError(423, 'spreadsheetLocked');
 const NegativeQuantityError = makeError(400, 'negativeQuantity');
 const ProductNotFoundError = makeError(404, 'productNotFound');
 const QuantityNotAvailableError = makeError(409, 'quantityNotAvailable');
-const UserNotFoundError = makeError(401, 'userNotFound');
-
-const sheetNotFound = 'sheetNotFound';
-const spreadsheetLocked = 'spreadsheetLocked';
-const negativeQuantity = 'negativeQuantity';
-const productNotFound = 'productNotFound';
-const quantityNotAvailable = 'quantityNotAvailable';
-const userNotFound = 'userNotFound';
+const UnknownUserError = makeError(401, 'unknownUser');
 
 module.exports = {
   SheetsError,
@@ -34,11 +27,5 @@ module.exports = {
   NegativeQuantityError,
   ProductNotFoundError,
   QuantityNotAvailableError,
-  UserNotFoundError,
-  sheetNotFound,
-  spreadsheetLocked,
-  negativeQuantity,
-  productNotFound,
-  quantityNotAvailable,
-  userNotFound
+  UnknownUserError
 };

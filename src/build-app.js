@@ -3,26 +3,46 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const asyncHandler = require('express-async-handler');
 
-const createClient = require('./sheets/create-client');
-const Spreadsheet = require('./sheets/spreadsheet');
+const {
+  SheetsError,
+  UnknownUserError
+} = require('./sheets/errors');
 
-async function getSpreadsheet() {
-  return new Spreadsheet({
-    id: process.env.GOOGLE_SPREADSHEET_ID,
-    client: await createClient({
-      email: process.env.GOOGLE_CLIENT_EMAIL,
-      key: process.env.GOOGLE_CLIENT_PRIVATE_KEY
+function serializeProducts(products) {
+  return {
+    products: Object.keys(products).map((id) => {
+      return Object.assign({ id: `${id}` }, products[id]);
     })
-  });
+  };
 }
 
-function buildApp() {
+function buildApp(spreadsheetFactory) {
   let app = express();
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(bodyParser.json({
     type: [ 'application/json' ]
   }));
   app.use(cors());
+
+  //
+  // get current user
+  //
+  app.get('/users/:id', asyncHandler(async (req, res) => {
+    let {
+      params: { id: userId }
+    } = req;
+
+    let spreadsheet = await spreadsheetFactory();
+    try {
+      let user = await spreadsheet.getUser(userId);
+      return res.status(200).json(user);
+    } catch (e) {
+      if (e instanceof UnknownUserError) {
+        return res.status(404).send();
+      }
+      throw e;
+    }
+  }));
 
   //
   // get products
@@ -32,37 +52,41 @@ function buildApp() {
       query: { userId }
     } = req;
 
-    let spreadsheet = await getSpreadsheet();
+    let spreadsheet = await spreadsheetFactory();
     let products = await spreadsheet.getProducts(userId);
-    return res.status(200).json(Object.keys(products).map((id) => {
-      return Object.assign({ id }, products[id]);
-    }));
+    return res.status(200).json(serializeProducts(products));
   }));
 
+  //
+  // set user's order for a product
+  //
   app.put('/products/:id', asyncHandler(async (req, res) => {
     let {
       query: { userId },
       params: { id: productId },
-      body: { quantity }
+      body: { ordered }
     } = req;
 
-    if (typeof quantity !== 'number' || quantity < 0) {
-      return res.status(400).json({ code: 'badInput', message: "Must specify 'quantity' as a non-negative number" });
+    let spreadsheet = await spreadsheetFactory();
+
+    // Verify that the user exists
+    await spreadsheet.getUser(userId);
+
+    if (typeof ordered !== 'number' || ordered < 0) {
+      return res.status(400).json({ code: 'badInput', message: "Must specify 'ordered' as a non-negative number" });
     }
 
-    let spreadsheet = await getSpreadsheet();
-    return res.status(200).json(await spreadsheet.setProductOrder(userId, productId, quantity));
+    let products = await spreadsheet.setProductOrder(userId, productId, ordered);
+    return res.status(200).json(serializeProducts(products));
   }));
 
   // Log errors
   app.use(function(err, req, res, next) {
-    console.error(err); // eslint-disable-line no-console
-
-    let { isSheetsError, code } = err;
-    if (isSheetsError && code) {
+    if (err instanceof SheetsError) {
       // One of our sheets errors
-      res.status().json({ code });
+      res.status(err.statusCode).json({ code: err.code });
     } else {
+      console.error(err); // eslint-disable-line no-console
       next(err);
     }
   });
