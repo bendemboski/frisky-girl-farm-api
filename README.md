@@ -2,6 +2,13 @@
 
 API server for Frisky Girl Farm CSA website
 
+## Overview
+
+This project implements the API server, which is an Express app that uses a
+Google Sheets spreadsheet as its backend storage. It's set up to run in AWS
+Lambda and to deploy via Serverless, but should be runnable in any deplyment
+environment that supports Node.js.
+
 ## Deployment Setup
 
 To set this up to deploy and run, perform the following steps:
@@ -18,7 +25,8 @@ To set this up to deploy and run, perform the following steps:
 ## Spreadsheet format
 
 The API server looks for several sheets in the spreadsheet, identified by name.
-Any other sheets will be ignored.
+Any other sheets will be ignored. A minimal template spreadsheet can be found
+[here](https://docs.google.com/spreadsheets/d/1gdw6m-eWT3OZ2dzEztGnws8m76nI2yKwSddvowNlQCs/edit#gid=1406465942).
 
 ### Mutex
 
@@ -29,7 +37,8 @@ There must be a sheet named `Mutex` laid out like this:
 | 1 | Name | Timestamp |
 
 This sheet must always be present, and is used internally to ensure concurrent
-writes to the sheet don't corrupt the data.
+writes to the sheet don't corrupt the data. The sheet is hidden in the template
+as it never needs to be accessed through the UI.
 
 ### Users
 
