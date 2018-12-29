@@ -65,10 +65,10 @@ class MockSheetsClient {
     this._stubGetOrders().resolves({
       data: {
         values: [
-          [ '', 'image', 'price', 'total', 'ordered', ...users.map((u) => u[0]) ],
-          [ 'Lettuce', 'http://lettuce.com/image.jpg', 0.15, totals[0], ordered[0], ...users.map((u) => u[1]) ],
-          [ 'Kale', 'http://kale.com/image.jpg', 0.85, totals[1], ordered[1], ...users.map((u) => u[2]) ],
-          [ 'Spicy Greens', 'http://spicy-greens.com/image.jpg', 15.00, totals[2], ordered[2], ...users.map((u) => u[3]) ]
+          [ '', 'price', 'image', 'total', 'ordered', ...users.map((u) => u[0]) ],
+          [ 'Lettuce', 0.15, 'http://lettuce.com/image.jpg', totals[0], ordered[0], ...users.map((u) => u[1]) ],
+          [ 'Kale', 0.85, 'http://kale.com/image.jpg', totals[1], ordered[1], ...users.map((u) => u[2]) ],
+          [ 'Spicy Greens', 15.00, 'http://spicy-greens.com/image.jpg', totals[2], ordered[2], ...users.map((u) => u[3]) ]
         ]
       }
     });

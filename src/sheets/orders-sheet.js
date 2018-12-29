@@ -9,8 +9,8 @@ const {
 
 const sheetName = 'Orders';
 const namesRowIndex = 0;
-const imagesRowIndex = 1;
-const pricesRowIndex = 2;
+const pricesRowIndex = 1;
+const imagesRowIndex = 2;
 const limitsRowIndex = 3;
 const totalsRowIndex = 4;
 const firstUserRowIndex = 5;

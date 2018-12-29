@@ -68,8 +68,8 @@ this:
 |   | A         | B              | C              | D              |
 |---|-----------|----------------|----------------|----------------|
 | 1 |           | (product name) | (product name) | (product name) |
-| 2 | image     | (image URL)    | (image URL)    | (image URL)    |
-| 3 | price     | (price)        | (price)        | (price)        |
+| 2 | price     | (price)        | (price)        | (price)        |
+| 3 | image     | (image URL)    | (image URL)    | (image URL)    |
 | 4 | total     | (total)        | (total)        | (total)        |
 | 5 | ordered   | =sum(B6:B)     | =sum(C6:C)     | =sum(D6:D)     |
 | 6 | (user id) | (ordered)      | (ordered)      | (ordered)      |
@@ -77,8 +77,8 @@ this:
 | 8 | (user id) | (ordered)      | (ordered)      | (ordered)      |
 
 * `product name` (string) the product's name
-* `image URL` (string) the URL of an image of the product
 * `price` (currency) the product's price
+* `image URL` (string) the URL of an image of the product
 * `total` (number) the total quantity of the product that is available (0 to disable the product)
 * `user id` (string) the id of a user
 * `ordered` (number) a user's quantity of a product ordered
