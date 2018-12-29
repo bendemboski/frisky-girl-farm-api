@@ -43,6 +43,7 @@ describe('API', function() {
     it('fails when the user is not found', async function() {
       let res = await api.get('/users/becky@friskygirlfarm.com');
       expect(res).to.have.status(404);
+      expect(res.body).to.include({ code: 'unknownUser' });
     });
   });
 

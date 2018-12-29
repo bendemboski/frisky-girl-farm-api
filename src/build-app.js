@@ -38,7 +38,7 @@ function buildApp(spreadsheetFactory) {
       return res.status(200).json(user);
     } catch (e) {
       if (e instanceof UnknownUserError) {
-        return res.status(404).send();
+        return res.status(404).json({ code: e.code });
       }
       throw e;
     }
