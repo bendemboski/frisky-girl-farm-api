@@ -16,4 +16,4 @@ async function createSpreadsheet(stage = 'stage') {
   });
 }
 
-createSpreadsheet().then((client) => global.client = client);
+module.exports = createSpreadsheet;
