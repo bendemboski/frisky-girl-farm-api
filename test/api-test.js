@@ -138,6 +138,13 @@ describe('API', function() {
           }
         ]
       });
+
+      expect(client.spreadsheets.values.update).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.update).to.have.been.calledWithMatch({
+        spreadsheetId: 'ssid',
+        range: 'Orders!D6',
+        requestBody: { values: [ [ 3 ] ] }
+      });
     });
 
     it('fails if the user is unknown', async function() {

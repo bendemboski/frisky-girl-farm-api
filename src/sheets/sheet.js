@@ -42,6 +42,7 @@ class Sheet {
     await this._values.update({
       spreadsheetId: this.spreadsheetId,
       range: this._range(range),
+      valueInputOption: 'RAW',
       requestBody
     });
   }

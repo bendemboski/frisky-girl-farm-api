@@ -76,7 +76,7 @@ function buildApp(spreadsheetFactory) {
       return res.status(400).json({ code: 'badInput', message: "Must specify 'ordered' as a non-negative number" });
     }
 
-    let products = await spreadsheet.setProductOrder(userId, productId, ordered);
+    let products = await spreadsheet.setProductOrder(userId, parseInt(productId, 10), ordered);
     return res.status(200).json(serializeProducts(products));
   }));
 
