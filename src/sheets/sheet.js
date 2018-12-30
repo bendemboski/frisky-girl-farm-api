@@ -28,7 +28,8 @@ class Sheet {
     } = await this._values.append({
       spreadsheetId: this.spreadsheetId,
       range: this._range(range),
-      requestBody: { values }
+      valueInputOption: 'RAW',
+      requestBody: { values: [ values ] }
     });
     return updatedRange.split('!')[1];
   }

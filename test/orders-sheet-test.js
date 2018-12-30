@@ -159,10 +159,11 @@ describe('OrdersSheet', function() {
         '3.ordered': 2
       });
 
-      expect(client.spreadsheets.values.append).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.append).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.append).to.have.been.calledWithMatch({
         spreadsheetId: 'ssid',
         range: 'Orders!B1',
-        requestBody: { values: [ 'ashley@friskygirlfarm.com', 0, 0, 2 ] }
+        requestBody: { values: [ [ 'ashley@friskygirlfarm.com', 0, 0, 2 ] ] }
       });
     });
 
@@ -183,10 +184,11 @@ describe('OrdersSheet', function() {
         '3.ordered': 2
       });
 
-      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.update).to.have.been.calledWithMatch({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
-        requestBody: { values: [ 2 ] }
+        requestBody: { values: [ [ 2 ] ] }
       });
     });
 
@@ -207,10 +209,11 @@ describe('OrdersSheet', function() {
         '3.ordered': 3
       });
 
-      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.update).to.have.been.calledWithMatch({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
-        requestBody: { values: [ 3 ] }
+        requestBody: { values: [ [ 3 ] ] }
       });
     });
 
@@ -231,10 +234,11 @@ describe('OrdersSheet', function() {
         '3.ordered': 2
       });
 
-      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.update).to.have.been.calledWithMatch({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
-        requestBody: { values: [ 2 ] }
+        requestBody: { values: [ [ 2 ] ] }
       });
     });
 
@@ -255,10 +259,11 @@ describe('OrdersSheet', function() {
         '3.ordered': 0
       });
 
-      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.update).to.have.been.calledWithMatch({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
-        requestBody: { values: [ 0 ] }
+        requestBody: { values: [ [ 0 ] ] }
       });
     });
 
@@ -279,10 +284,11 @@ describe('OrdersSheet', function() {
         '3.ordered': 5
       });
 
-      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.update).to.have.been.calledWithMatch({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
-        requestBody: { values: [ 5 ] }
+        requestBody: { values: [ [ 5 ] ] }
       });
     });
 
@@ -303,10 +309,11 @@ describe('OrdersSheet', function() {
         '3.ordered': 4
       });
 
-      expect(client.spreadsheets.values.update).to.have.been.calledOnceWith({
+      expect(client.spreadsheets.values.update).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.update).to.have.been.calledWithMatch({
         spreadsheetId: 'ssid',
         range: 'Orders!D7',
-        requestBody: { values: [ 4 ] }
+        requestBody: { values: [ [ 4 ] ] }
       });
     });
 

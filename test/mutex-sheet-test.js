@@ -35,7 +35,7 @@ describe('MutexSheet', function() {
       spreadsheetId: 'ssid',
       range: 'Mutex!A1',
       requestBody: {
-        values: [ 'ashley@friskygirlfarm.com', now.toISOString() ]
+        values: [ [ 'ashley@friskygirlfarm.com', now.toISOString() ] ]
       }
     });
   });
@@ -76,7 +76,7 @@ describe('MutexSheet', function() {
     expect(client.spreadsheets.values.append.secondCall).to.have.been.calledWithMatch({
       spreadsheetId: 'ssid',
       range: 'Mutex!A1',
-      requestBody: { values: sinon.match.array.startsWith([ 'ashley@friskygirlfarm.com' ]) }
+      requestBody: { values: [ sinon.match.array.startsWith([ 'ashley@friskygirlfarm.com' ]) ] }
     });
   });
 
