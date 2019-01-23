@@ -17,10 +17,11 @@ To set this up to deploy and run, perform the following steps:
 2. Create a [service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts) within the project with an editor or owner role
 3. Create a [service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys) for the service account.
 4. Extract the `private_key` and `client_email` fields from the downloaded service account key file and put them in a `config.<stage>.json` file (see [Build credentials](#build-credentials) section).
-5. Using any user account, create a new Google Sheets spreadsheet
-6. Invite the service account to the spreadsheet as an editor, as you would invite any user, but using the `client_email` from step 4.
-7. Copy the ID of the spreadsheet from its URL (`https://docs.google.com/spreadsheets/d/<id>/edit`) it put it in the `config.<stage>.json` file (see [Build credentials](#build-credentials) section).
-8. Set up the spreadsheet's `Mutex` sheet (see [Spreadsheet format](#spreadsheet-format) section).
+5. [Enable](https://console.developers.google.com/flows/enableapi?apiid=sheets.googleapis.com) the Google Sheets API for your project.
+6. Using any user account, create a new Google Sheets spreadsheet
+7. Invite the service account to the spreadsheet as an editor, as you would invite any user, but using the `client_email` from step 4.
+8. Copy the ID of the spreadsheet from its URL (`https://docs.google.com/spreadsheets/d/<id>/edit`) it put it in the `config.<stage>.json` file (see [Build credentials](#build-credentials) section).
+9. Set up the spreadsheet's `Mutex` sheet (see [Spreadsheet format](#spreadsheet-format) section).
 
 ## Spreadsheet format
 
