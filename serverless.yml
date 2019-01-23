@@ -3,7 +3,7 @@ service: frisky-girl-farm-api
 provider:
   name: aws
   runtime: nodejs8.10
-  stage: ${opt:stage, 'stage'}
+  stage: ${opt:stage, 'prod'}
   region: us-west-2
   environment:
     GOOGLE_CLIENT_EMAIL: ${file(config.${self:provider.stage}.json):email}
