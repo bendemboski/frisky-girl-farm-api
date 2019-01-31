@@ -87,6 +87,37 @@ describe('API', function() {
       });
     });
 
+    it('works with 0/unlimited quantities', async function() {
+      client.setOrders(
+        [ 0, -1, 2 ],
+        [ 'ashley@friskygirlfarm.com', 0, 2, 1 ],
+        [ 'ellen@friskygirlfarm.com', 0, 0, 1 ]
+      );
+
+      let res = await api.get('/products?userId=ashley@friskygirlfarm.com');
+      expect(res).to.have.status(200);
+      expect(res.body).to.deep.equal({
+        products: [
+          {
+            id: '2',
+            name: 'Kale',
+            imageUrl: 'http://kale.com/image.jpg',
+            price: 0.85,
+            available: -1,
+            ordered: 2
+          },
+          {
+            id: '3',
+            name: 'Spicy Greens',
+            imageUrl: 'http://spicy-greens.com/image.jpg',
+            price: 15.00,
+            available: 1,
+            ordered: 1
+          }
+        ]
+      });
+    });
+
     it('fails if ordering is not open', async function() {
       client.setNoOrders();
       let res = await api.get('/products?userId=ashley@friskygirlfarm.com');
@@ -144,6 +175,53 @@ describe('API', function() {
         spreadsheetId: 'ssid',
         range: 'Orders!D6',
         requestBody: { values: [ [ 3 ] ] }
+      });
+    });
+
+    it('works with unlimited quantities', async function() {
+      client.setOrders(
+        [ -1, 3, 5 ],
+        [ 'ashley@friskygirlfarm.com', 4, 0, 1 ],
+        [ 'ellen@friskygirlfarm.com', 3, 2, 0 ]
+      );
+      client.stubUpdateOrder();
+
+      let res = await api.put('/products/1?userId=ashley@friskygirlfarm.com').send({ ordered: 7 });
+      expect(res).to.have.status(200);
+      expect(res.body).to.deep.equal({
+        products: [
+          {
+            id: '1',
+            name: 'Lettuce',
+            imageUrl: 'http://lettuce.com/image.jpg',
+            price: 0.15,
+            available: -1,
+            ordered: 7
+          },
+          {
+            id: '2',
+            name: 'Kale',
+            imageUrl: 'http://kale.com/image.jpg',
+            price: 0.85,
+            available: 1,
+            ordered: 0
+          },
+          {
+            id: '3',
+            name: 'Spicy Greens',
+            imageUrl: 'http://spicy-greens.com/image.jpg',
+            price: 15.00,
+            available: 5,
+            ordered: 1
+          }
+        ]
+      });
+
+      expect(client.spreadsheets.values.update).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.update).to.have.been.calledWithMatch({
+        spreadsheetId: 'ssid',
+        range: 'Orders!B6',
+        requestBody: { values: [ [ 7 ] ] }
       });
     });
 

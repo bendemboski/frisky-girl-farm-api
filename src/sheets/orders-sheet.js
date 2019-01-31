@@ -42,7 +42,8 @@ class OrdersSheet extends Sheet {
   // `price` is the price of the product
   // `available` is the number of units of the product available for to order,
   //             ignoring any they have already ordered (i.e. the max they
-  //             could set their order to without exceeding availability)
+  //             could set their order to without exceeding availability). If
+  //             there is no limit on the product, this will be set to -1.
   // `ordered` is the number of units of the product the user has ordered
   async getForUser(userId) {
     let columns;
@@ -71,15 +72,22 @@ class OrdersSheet extends Sheet {
           ordered = 0;
         }
 
+        let available;
+        if (limit < 0) {
+          available = -1;
+        } else {
+          // the limit minus the total is the *additional* units the user could
+          // order, but we want the *total* units the user could order, so we
+          // have to add back what they've already ordered
+          available = limit - column[totalsRowIndex] + ordered;
+        }
+
         // id is i + 1 because we're skipping the first column in our iteration
         products[i + 1] = {
           name: column[namesRowIndex],
           imageUrl: column[imagesRowIndex],
           price: column[pricesRowIndex],
-          // the limit minus the total is the *additional* units the user could
-          // order, but we want the *total* units the user could order, so we
-          // have to add back what they've already ordered
-          available: limit - column[totalsRowIndex] + ordered,
+          available,
           ordered
         };
       }
@@ -102,7 +110,7 @@ class OrdersSheet extends Sheet {
     }
 
     let { available } = product;
-    if (quantity > available) {
+    if (available !== -1 && quantity > available) {
       throw new QuantityNotAvailableError({ available });
     }
 

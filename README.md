@@ -80,7 +80,7 @@ this:
 * `product name` (string) the product's name
 * `price` (currency) the product's price
 * `image URL` (string) the URL of an image of the product
-* `total` (number) the total quantity of the product that is available (0 to disable the product)
+* `total` (number) the total quantity of the product that is available (0 to disable the product or -1 to not have a limit)
 * `user id` (string) the id of a user
 * `ordered` (number) a user's quantity of a product ordered
 
