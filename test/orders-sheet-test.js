@@ -103,11 +103,11 @@ describe('OrdersSheet', function() {
 
       let ret = await sheet.getForUser('ashley@friskygirlfarm.com');
       expect(ret).to.deep.nested.include({
-        'products.1.available': 0,
+        'products.1.available': 4,
         'products.1.ordered': 4,
         'products.2.available': 1,
         'products.2.ordered': 0,
-        'products.3.available': 2,
+        'products.3.available': 3,
         'products.3.ordered': 1
       });
     });
@@ -121,11 +121,11 @@ describe('OrdersSheet', function() {
 
       let ret = await sheet.getForUser('ashley@friskygirlfarm.com');
       expect(ret).to.deep.nested.include({
-        'products.1.available': 0,
+        'products.1.available': 4,
         'products.1.ordered': 4,
         'products.2.available': 1,
         'products.2.ordered': 0,
-        'products.3.available': 4,
+        'products.3.available': 5,
         'products.3.ordered': 1
       });
     });
@@ -155,7 +155,7 @@ describe('OrdersSheet', function() {
         '1.ordered': 0,
         '2.available': 1,
         '2.ordered': 0,
-        '3.available': 2,
+        '3.available': 4,
         '3.ordered': 2
       });
 
@@ -176,11 +176,11 @@ describe('OrdersSheet', function() {
 
       let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 2);
       expect(ret).to.deep.nested.include({
-        '1.available': 0,
+        '1.available': 3,
         '1.ordered': 3,
         '2.available': 3,
         '2.ordered': 0,
-        '3.available': 2,
+        '3.available': 4,
         '3.ordered': 2
       });
 
@@ -201,11 +201,11 @@ describe('OrdersSheet', function() {
 
       let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 3);
       expect(ret).to.deep.nested.include({
-        '1.available': 0,
+        '1.available': 3,
         '1.ordered': 3,
         '2.available': 3,
         '2.ordered': 0,
-        '3.available': 2,
+        '3.available': 5,
         '3.ordered': 3
       });
 
@@ -226,11 +226,11 @@ describe('OrdersSheet', function() {
 
       let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 2);
       expect(ret).to.deep.nested.include({
-        '1.available': 0,
+        '1.available': 3,
         '1.ordered': 3,
         '2.available': 3,
         '2.ordered': 0,
-        '3.available': 3,
+        '3.available': 5,
         '3.ordered': 2
       });
 
@@ -251,7 +251,7 @@ describe('OrdersSheet', function() {
 
       let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 0);
       expect(ret).to.deep.nested.include({
-        '1.available': 0,
+        '1.available': 3,
         '1.ordered': 3,
         '2.available': 3,
         '2.ordered': 0,
@@ -276,11 +276,11 @@ describe('OrdersSheet', function() {
 
       let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 5);
       expect(ret).to.deep.nested.include({
-        '1.available': 0,
+        '1.available': 3,
         '1.ordered': 3,
         '2.available': 3,
         '2.ordered': 0,
-        '3.available': 0,
+        '3.available': 5,
         '3.ordered': 5
       });
 
@@ -301,11 +301,11 @@ describe('OrdersSheet', function() {
 
       let ret = await sheet.setOrdered('ashley@friskygirlfarm.com', 3, 4);
       expect(ret).to.deep.nested.include({
-        '1.available': 0,
+        '1.available': 3,
         '1.ordered': 3,
         '2.available': 3,
         '2.ordered': 0,
-        '3.available': 1,
+        '3.available': 5,
         '3.ordered': 4
       });
 
@@ -347,7 +347,9 @@ describe('OrdersSheet', function() {
         [ 'ashley@friskygirlfarm.com', 3, 0, 3 ]
       );
 
-      await expect(sheet.setOrdered('ashley@friskygirlfarm.com', 3, 5)).to.eventually.be.rejectedWith(QuantityNotAvailableError);
+      await expect(sheet.setOrdered('ashley@friskygirlfarm.com', 3, 5))
+        .to.eventually.be.rejectedWith(QuantityNotAvailableError)
+        .with.nested.property('extra.available', 4);
       expect(client.spreadsheets.values.update).to.not.have.been.called;
     });
 

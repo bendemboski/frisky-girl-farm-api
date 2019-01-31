@@ -40,7 +40,9 @@ class OrdersSheet extends Sheet {
   // `name` is the name of the product
   // `imageUrl` is the URL of the product image
   // `price` is the price of the product
-  // `available` is the number of units of the product still available to order
+  // `available` is the number of units of the product available for to order,
+  //             ignoring any they have already ordered (i.e. the max they
+  //             could set their order to without exceeding availability)
   // `ordered` is the number of units of the product the user has ordered
   async getForUser(userId) {
     let columns;
@@ -61,20 +63,25 @@ class OrdersSheet extends Sheet {
       let limit = column[limitsRowIndex];
       // has to be non-empty and non-zero for product to appear
       if (limit) {
-        // add one because we're skipping the first column in our iteration
-        let id = i + 1;
-        let product = {
+        // Determine how many this user has ordered
+        let ordered;
+        if (userRowIndex !== -1) {
+          ordered = column[firstUserRowIndex + userRowIndex] || 0;
+        } else {
+          ordered = 0;
+        }
+
+        // id is i + 1 because we're skipping the first column in our iteration
+        products[i + 1] = {
           name: column[namesRowIndex],
           imageUrl: column[imagesRowIndex],
           price: column[pricesRowIndex],
-          available: limit - column[totalsRowIndex]
+          // the limit minus the total is the *additional* units the user could
+          // order, but we want the *total* units the user could order, so we
+          // have to add back what they've already ordered
+          available: limit - column[totalsRowIndex] + ordered,
+          ordered
         };
-        if (userRowIndex !== -1) {
-          product.ordered = column[firstUserRowIndex + userRowIndex] || 0;
-        } else {
-          product.ordered = 0;
-        }
-        products[id] = product;
       }
     });
 
@@ -94,9 +101,9 @@ class OrdersSheet extends Sheet {
       throw new ProductNotFoundError();
     }
 
-    let { available, ordered } = product;
-    if (quantity > available + ordered) {
-      throw new QuantityNotAvailableError();
+    let { available } = product;
+    if (quantity > available) {
+      throw new QuantityNotAvailableError({ available });
     }
 
     if (userRowIndex !== -1) {
@@ -108,7 +115,6 @@ class OrdersSheet extends Sheet {
       await this.append('B1', row);
     }
 
-    product.available -= (quantity - product.ordered);
     product.ordered = quantity;
     return products;
   }

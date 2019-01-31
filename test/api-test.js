@@ -64,7 +64,7 @@ describe('API', function() {
             name: 'Lettuce',
             imageUrl: 'http://lettuce.com/image.jpg',
             price: 0.15,
-            available: 0,
+            available: 4,
             ordered: 4
           },
           {
@@ -80,7 +80,7 @@ describe('API', function() {
             name: 'Spicy Greens',
             imageUrl: 'http://spicy-greens.com/image.jpg',
             price: 15.00,
-            available: 4,
+            available: 5,
             ordered: 1
           }
         ]
@@ -117,7 +117,7 @@ describe('API', function() {
             name: 'Lettuce',
             imageUrl: 'http://lettuce.com/image.jpg',
             price: 0.15,
-            available: 0,
+            available: 4,
             ordered: 4
           },
           {
@@ -133,7 +133,7 @@ describe('API', function() {
             name: 'Spicy Greens',
             imageUrl: 'http://spicy-greens.com/image.jpg',
             price: 15.00,
-            available: 2,
+            available: 5,
             ordered: 3
           }
         ]
@@ -244,7 +244,10 @@ describe('API', function() {
 
       let res = await api.put('/products/3?userId=ashley@friskygirlfarm.com').send({ ordered: 3 });
       expect(res).to.have.status(409);
-      expect(res.body).to.include({ code: 'quantityNotAvailable' });
+      expect(res.body).to.deep.include({
+        code: 'quantityNotAvailable',
+        extra: { available: 2 }
+      });
     });
   });
 });

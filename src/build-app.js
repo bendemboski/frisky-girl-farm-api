@@ -84,7 +84,8 @@ function buildApp(spreadsheetFactory) {
   app.use(function(err, req, res, next) {
     if (err instanceof SheetsError) {
       // One of our sheets errors
-      res.status(err.statusCode).json({ code: err.code });
+      let { code, extra } = err;
+      res.status(err.statusCode).json({ code, extra });
     } else {
       console.error(err); // eslint-disable-line no-console
       next(err);

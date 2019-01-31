@@ -57,12 +57,12 @@ describe('Spreadsheet', function() {
         '1.name': 'Lettuce',
         '1.imageUrl': 'http://lettuce.com/image.jpg',
         '1.price': 0.15,
-        '1.available': 0,
+        '1.available': 3,
         '1.ordered': 3,
         '2.name': 'Kale',
         '2.imageUrl': 'http://kale.com/image.jpg',
         '2.price': 0.85,
-        '2.available': 1,
+        '2.available': 3,
         '2.ordered': 2,
         '3.name': 'Spicy Greens',
         '3.imageUrl': 'http://spicy-greens.com/image.jpg',
@@ -85,11 +85,11 @@ describe('Spreadsheet', function() {
 
       let ret = await spreadsheet.setProductOrder('ashley@friskygirlfarm.com', 3, 3);
       expect(ret).to.deep.nested.include({
-        '1.available': 0,
+        '1.available': 3,
         '1.ordered': 3,
-        '2.available': 1,
+        '2.available': 3,
         '2.ordered': 2,
-        '3.available': 1,
+        '3.available': 4,
         '3.ordered': 3
       });
       expect(client.spreadsheets.values.append).to.have.been.calledOnce;
@@ -105,7 +105,9 @@ describe('Spreadsheet', function() {
 
     it('propagates errors', async function() {
       client.setMutexUnlocked();
-      await expect(spreadsheet.setProductOrder('ashley@friskygirlfarm.com', 3, 6)).to.be.rejectedWith(QuantityNotAvailableError);
+      await expect(spreadsheet.setProductOrder('ashley@friskygirlfarm.com', 3, 6))
+        .to.eventually.be.rejectedWith(QuantityNotAvailableError)
+        .with.nested.property('extra.available', 4);
 
       client.resetOrders();
       client.setNoOrders();

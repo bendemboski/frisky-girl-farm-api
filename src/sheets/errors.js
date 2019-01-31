@@ -3,11 +3,12 @@ class SheetsError extends Error {
 
 function makeError(statusCode, code) {
   class Err extends SheetsError {
-    constructor(...args) {
-      super(code, ...args);
+    constructor(extra) {
+      super(code);
       Error.captureStackTrace(this, Err);
       this.statusCode = statusCode;
       this.code = code;
+      this.extra = extra;
     }
   }
   return Err;
