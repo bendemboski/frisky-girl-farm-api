@@ -24,7 +24,7 @@ class Spreadsheet {
     try {
       return await this.orders.setOrdered(userId, productId, quantity);
     } finally {
-      this.mutex.unlock();
+      await this.mutex.unlock();
     }
   }
 }
