@@ -19,7 +19,7 @@ class Spreadsheet {
   }
 
   async setProductOrder(userId, productId, quantity) {
-    await this.mutex.lock();
+    await this.mutex.lock(userId);
 
     try {
       return await this.orders.setOrdered(userId, productId, quantity);

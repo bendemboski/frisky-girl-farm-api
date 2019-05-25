@@ -93,6 +93,7 @@ describe('Spreadsheet', function() {
         '3.ordered': 3
       });
       expect(client.spreadsheets.values.append).to.have.been.calledOnce;
+      expect(client.spreadsheets.values.append.firstCall.args[0].requestBody.values[0][0]).to.equal('ashley@friskygirlfarm.com');
       expect(client.spreadsheets.values.clear).to.have.been.calledOnce;
       expect(client.spreadsheets.values.update).to.have.been.calledAfter(client.spreadsheets.values.append);
       expect(client.spreadsheets.values.update).to.have.been.calledBefore(client.spreadsheets.values.clear);
