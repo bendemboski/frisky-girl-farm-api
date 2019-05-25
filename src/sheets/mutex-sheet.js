@@ -5,7 +5,7 @@ const sheetName = 'Mutex';
 const mutexLockedRange = 'A2:B2';
 
 const retryInterval = 500;
-const maxTries = 5;
+const maxTries = 20;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

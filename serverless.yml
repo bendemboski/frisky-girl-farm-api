@@ -5,6 +5,7 @@ provider:
   runtime: nodejs8.10
   stage: ${opt:stage, 'prod'}
   region: us-west-2
+  timeout: 30
   environment:
     GOOGLE_CLIENT_EMAIL: ${file(config.${self:provider.stage}.json):email}
     GOOGLE_CLIENT_PRIVATE_KEY: ${file(config.${self:provider.stage}.json):privateKey}
