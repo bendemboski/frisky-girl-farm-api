@@ -120,6 +120,6 @@ Google API user with write access to the spreadsheet. Each stage (e.g. `stage`,
 }
 ```
 
-When TravisCI deploys a successful master build it deploys it to the `stage`
-stage, so `ci/config.stage.json.enc` is an encryped JSON file containing our
-stage info.
+When TravisCI deploys a successful master build it deploys it to the `prod`
+stage, so `ci/credentials.tar.enc` is an encryped tarball containing our
+`prod` deployment info.
