@@ -9,6 +9,9 @@ module.exports = {
   extends: [
     'plugin:turbopatent/node'
   ],
+  rules: {
+    'no-console': 'off'
+  },
   overrides: [
     {
       files: [

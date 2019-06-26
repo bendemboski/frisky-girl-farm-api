@@ -31,6 +31,7 @@ class MutexSheet extends Sheet {
     let tries = 0;
     while (!await this._tryLock(userId)) {
       if (++tries === maxTries) {
+        console.log('Exceeded max tries to lock mutex');
         throw new SpreadsheetLockedError();
       }
       await sleep(this.retryInterval || retryInterval);
@@ -43,11 +44,15 @@ class MutexSheet extends Sheet {
   }
 
   async _tryLock(userId) {
+    console.log('Trying to lock mutex');
     let appendedRange = await this.append('A1', [ userId, new Date().toISOString() ]);
     if (appendedRange === mutexLockedRange) {
+      console.log('Mutex locked!');
       return true;
     } else {
+      console.log('Mutex not locked, clearing');
       await this.clear(appendedRange);
+      console.log('Mutex cleared');
       return false;
     }
   }
