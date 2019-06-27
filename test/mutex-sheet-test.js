@@ -17,6 +17,7 @@ describe('MutexSheet', function() {
       spreadsheetId: 'ssid'
     });
     sheet.retryInterval = 10;
+    sheet.maxTime = 50;
   });
 
   afterEach(function() {

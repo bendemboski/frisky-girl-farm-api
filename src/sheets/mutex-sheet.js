@@ -1,11 +1,12 @@
 const Sheet = require('./sheet');
 const { SpreadsheetLockedError } = require('./errors');
+const log = require('../log');
 
 const sheetName = 'Mutex';
 const mutexLockedRange = 'A2:B2';
 
-const retryInterval = 500;
-const maxTries = 20;
+const retryInterval = 1000;
+const maxSeconds = 15;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -28,10 +29,12 @@ class MutexSheet extends Sheet {
 
   // Try to lock the mutex, throwing a SheetLockedError() if unable to
   async lock(userId) {
-    let tries = 0;
+    let start = new Date();
+    let maxTime = this.maxTime || (maxSeconds * 1000);
+
     while (!await this._tryLock(userId)) {
-      if (++tries === maxTries) {
-        console.log('Exceeded max tries to lock mutex');
+      if (new Date() - start > maxTime) {
+        log('Exceeded max time to lock mutex');
         throw new SpreadsheetLockedError();
       }
       await sleep(this.retryInterval || retryInterval);
@@ -40,19 +43,21 @@ class MutexSheet extends Sheet {
 
   // Unlock the mutex
   async unlock() {
+    log('Unlocking mutex');
     await this.clear(mutexLockedRange);
+    log('Mutex unlocked');
   }
 
   async _tryLock(userId) {
-    console.log('Trying to lock mutex');
+    log('Trying to lock mutex');
     let appendedRange = await this.append('A1', [ userId, new Date().toISOString() ]);
     if (appendedRange === mutexLockedRange) {
-      console.log('Mutex locked!');
+      log('Mutex locked!');
       return true;
     } else {
-      console.log('Mutex not locked, clearing');
+      log('Mutex not locked, clearing');
       await this.clear(appendedRange);
-      console.log('Mutex cleared');
+      log('Mutex cleared');
       return false;
     }
   }

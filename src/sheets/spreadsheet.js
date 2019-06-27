@@ -1,6 +1,7 @@
 const UsersSheet = require('./users-sheet');
 const MutexSheet = require('./mutex-sheet');
 const OrdersSheet = require('./orders-sheet');
+const log = require('../log');
 
 class Spreadsheet {
   constructor({ id, client }) {
@@ -22,7 +23,11 @@ class Spreadsheet {
     await this.mutex.lock(userId);
 
     try {
+      log('setting order');
       return await this.orders.setOrdered(userId, productId, quantity);
+    } catch (e) {
+      log('failed to set order', e);
+      throw e;
     } finally {
       await this.mutex.unlock();
     }

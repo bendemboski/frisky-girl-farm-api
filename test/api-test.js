@@ -20,6 +20,7 @@ describe('API', function() {
         client
       });
       spreadsheet.mutex.retryInterval = 10;
+      spreadsheet.mutex.maxTime = 50;
       return spreadsheet;
     }));
   });

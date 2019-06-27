@@ -29,6 +29,7 @@ describe('Spreadsheet', function() {
       id: 'ssid'
     });
     spreadsheet.mutex.retryInterval = 10;
+    spreadsheet.mutex.maxTime = 50;
   });
 
   afterEach(function() {
