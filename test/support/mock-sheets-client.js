@@ -5,7 +5,7 @@ class MockSheetsClient {
     this.spreadsheets = { values: {} };
   }
 
-  setUsers() {
+  setUsers(extraUsers = []) {
     this.spreadsheets.values.get = this.spreadsheets.values.get || sinon.stub();
 
     this.spreadsheets.values.get.withArgs({
@@ -18,7 +18,8 @@ class MockSheetsClient {
         values: [
           [ 'email', 'name', 'location', 'balance', 'starting balance', 'spent' ],
           [ 'ellen@friskygirlfarm.com', 'Ellen Scheffer', 'Lake City', 25.00, 100.00, 75.00 ],
-          [ 'ashley@friskygirlfarm.com', 'Ashley Wilson', 'Wallingford', 45.00, 100.00, 55.00 ]
+          [ 'ashley@friskygirlfarm.com', 'Ashley Wilson', 'Wallingford', 45.00, 100.00, 55.00 ],
+          ...extraUsers
         ]
       }
     });

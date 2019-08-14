@@ -14,13 +14,13 @@ class UsersSheet extends Sheet {
 
   async getUser(userId) {
     let [ , ...users ] = await this.getAll({ majorDimension: 'ROWS' });
-    let user = users.find((u) => u[emailColumnIndex] === userId);
+    let user = users.find((u) => u[emailColumnIndex].trim() === userId.trim());
     if (!user) {
       throw new UnknownUserError();
     }
 
     return {
-      email: user[emailColumnIndex],
+      email: user[emailColumnIndex].trim(),
       name: user[nameColumnIndex],
       location: user[locationColumnIndex],
       balance: user[balanceColumnIndex]
