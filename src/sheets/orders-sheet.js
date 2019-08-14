@@ -120,7 +120,7 @@ class OrdersSheet extends Sheet {
     } else {
       let row = [ userId, ...Object.keys(products).map(() => 0) ];
       row[productId] = quantity;
-      await this.append('B1', row);
+      await this.append(`A${firstUserRowIndex + 1}`, row);
     }
 
     product.ordered = quantity;

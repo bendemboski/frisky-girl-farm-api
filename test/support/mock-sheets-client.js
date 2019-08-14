@@ -83,7 +83,7 @@ class MockSheetsClient {
     this.spreadsheets.values.append = this.spreadsheets.values.append || sinon.stub();
     this.spreadsheets.values.append.withArgs(sinon.match({
       spreadsheetId: 'ssid',
-      range: 'Orders!B1'
+      range: 'Orders!A6'
     })).resolves({ data: { updates: { updatedRange: 'Orders!A8:D8' } } });
   }
 

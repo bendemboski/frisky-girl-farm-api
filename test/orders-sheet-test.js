@@ -162,7 +162,7 @@ describe('OrdersSheet', function() {
       expect(client.spreadsheets.values.append).to.have.been.calledOnce;
       expect(client.spreadsheets.values.append).to.have.been.calledWithMatch({
         spreadsheetId: 'ssid',
-        range: 'Orders!B1',
+        range: 'Orders!A6',
         requestBody: { values: [ [ 'ashley@friskygirlfarm.com', 0, 0, 2 ] ] }
       });
     });
