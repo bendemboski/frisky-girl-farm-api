@@ -15,7 +15,6 @@ function makeError(statusCode, code) {
 }
 
 const OrdersNotOpenError = makeError(404, 'ordersNotOpen');
-const SpreadsheetLockedError = makeError(423, 'spreadsheetLocked');
 const NegativeQuantityError = makeError(400, 'negativeQuantity');
 const ProductNotFoundError = makeError(404, 'productNotFound');
 const QuantityNotAvailableError = makeError(409, 'quantityNotAvailable');
@@ -24,7 +23,6 @@ const UnknownUserError = makeError(401, 'unknownUser');
 module.exports = {
   SheetsError,
   OrdersNotOpenError,
-  SpreadsheetLockedError,
   NegativeQuantityError,
   ProductNotFoundError,
   QuantityNotAvailableError,

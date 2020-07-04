@@ -4,7 +4,6 @@ const sinon = require('sinon');
 const Spreadsheet = require('../src/sheets/spreadsheet');
 const {
   OrdersNotOpenError,
-  SpreadsheetLockedError,
   QuantityNotAvailableError,
   UnknownUserError
 } = require('../src/sheets/errors');
@@ -28,8 +27,6 @@ describe('Spreadsheet', function() {
       client,
       id: 'ssid'
     });
-    spreadsheet.mutex.retryInterval = 10;
-    spreadsheet.mutex.maxTime = 50;
   });
 
   afterEach(function() {
@@ -80,8 +77,7 @@ describe('Spreadsheet', function() {
   });
 
   describe('setProductOrder', function() {
-    it('works and locks the mutex', async function() {
-      client.setMutexUnlocked();
+    it('works', async function() {
       client.stubUpdateOrder();
 
       let ret = await spreadsheet.setProductOrder('ashley@friskygirlfarm.com', 3, 3);
@@ -93,20 +89,9 @@ describe('Spreadsheet', function() {
         '3.available': 4,
         '3.ordered': 3
       });
-      expect(client.spreadsheets.values.append).to.have.been.calledOnce;
-      expect(client.spreadsheets.values.append.firstCall.args[0].requestBody.values[0][0]).to.equal('ashley@friskygirlfarm.com');
-      expect(client.spreadsheets.values.clear).to.have.been.calledOnce;
-      expect(client.spreadsheets.values.update).to.have.been.calledAfter(client.spreadsheets.values.append);
-      expect(client.spreadsheets.values.update).to.have.been.calledBefore(client.spreadsheets.values.clear);
-    });
-
-    it('fails if it cannot lock the mutex', async function() {
-      client.setMutexLocked();
-      await expect(spreadsheet.setProductOrder('ashley@friskygirlfarm.com', 3, 3)).to.be.rejectedWith(SpreadsheetLockedError);
     });
 
     it('propagates errors', async function() {
-      client.setMutexUnlocked();
       await expect(spreadsheet.setProductOrder('ashley@friskygirlfarm.com', 3, 6))
         .to.eventually.be.rejectedWith(QuantityNotAvailableError)
         .with.nested.property('extra.available', 4);

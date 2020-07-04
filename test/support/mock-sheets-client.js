@@ -25,32 +25,6 @@ class MockSheetsClient {
     });
   }
 
-  setMutexUnlocked() {
-    this._stubMutex().resolves({
-      data: {
-        updates: {
-          updatedRange: 'Mutex!A2:B2'
-        }
-      }
-    });
-    this.spreadsheets.values.clear = this.spreadsheets.values.clear || sinon.stub();
-  }
-
-  setMutexLocked() {
-    this._stubMutex().resolves({
-      data: {
-        updates: {
-          updatedRange: 'Mutex!A3:B3'
-        }
-      }
-    });
-    this.spreadsheets.values.clear = this.spreadsheets.values.clear || sinon.stub();
-  }
-
-  stubUnlockMutex() {
-    this.spreadsheets.values.clear = this.spreadsheets.values.clear || sinon.stub();
-  }
-
   setNoOrders() {
     this._stubGetOrders().rejects({ code: 400 });
   }
@@ -90,15 +64,6 @@ class MockSheetsClient {
   stubUpdateOrder() {
     this.spreadsheets.values.update = this.spreadsheets.values.update || sinon.stub();
     this.spreadsheets.values.update.withArgs(sinon.match({ range: 'Orders!' })).resolves();
-  }
-
-  _stubMutex() {
-    this.spreadsheets.values.append = this.spreadsheets.values.append || sinon.stub();
-
-    return this.spreadsheets.values.append.withArgs(sinon.match({
-      spreadsheetId: 'ssid',
-      range: 'Mutex!A1'
-    }));
   }
 
   _stubGetOrders() {

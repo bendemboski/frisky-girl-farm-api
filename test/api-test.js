@@ -19,8 +19,6 @@ describe('API', function() {
         id: 'ssid',
         client
       });
-      spreadsheet.mutex.retryInterval = 10;
-      spreadsheet.mutex.maxTime = 50;
       return spreadsheet;
     }));
   });
@@ -128,10 +126,6 @@ describe('API', function() {
   });
 
   describe('PUT /products/:id', async function() {
-    beforeEach(function() {
-      client.setMutexUnlocked();
-    });
-
     it('works', async function() {
       client.setOrders(
         [ 7, 3, 5 ],
@@ -280,14 +274,6 @@ describe('API', function() {
       let res = await api.put('/products/3?userId=ashley@friskygirlfarm.com').send({ ordered: 3 });
       expect(res).to.have.status(404);
       expect(res.body).to.include({ code: 'ordersNotOpen' });
-    });
-
-    it('fails if the spreadsheet is locked', async function() {
-      client.setMutexLocked();
-
-      let res = await api.put('/products/3?userId=ashley@friskygirlfarm.com').send({ ordered: 3 });
-      expect(res).to.have.status(423);
-      expect(res.body).to.include({ code: 'spreadsheetLocked' });
     });
 
     it('fails if the product is not found', async function() {

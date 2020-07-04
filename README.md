@@ -21,25 +21,12 @@ To set this up to deploy and run, perform the following steps:
 6. Using any user account, create a new Google Sheets spreadsheet
 7. Invite the service account to the spreadsheet as an editor, as you would invite any user, but using the `client_email` from step 4.
 8. Copy the ID of the spreadsheet from its URL (`https://docs.google.com/spreadsheets/d/<id>/edit`) it put it in the `config.<stage>.json` file (see [Build credentials](#build-credentials) section).
-9. Set up the spreadsheet's `Mutex` sheet (see [Spreadsheet format](#spreadsheet-format) section).
 
 ## Spreadsheet format
 
 The API server looks for several sheets in the spreadsheet, identified by name.
 Any other sheets will be ignored. A minimal template spreadsheet can be found
 [here](https://docs.google.com/spreadsheets/d/1gdw6m-eWT3OZ2dzEztGnws8m76nI2yKwSddvowNlQCs/edit#gid=1406465942).
-
-### Mutex
-
-There must be a sheet named `Mutex` laid out like this:
-
-|   | A    | B         |
-|---|------|-----------|
-| 1 | Name | Timestamp |
-
-This sheet must always be present, and is used internally to ensure concurrent
-writes to the sheet don't corrupt the data. The sheet is hidden in the template
-as it never needs to be accessed through the UI.
 
 ### Users
 

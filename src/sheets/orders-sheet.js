@@ -96,8 +96,7 @@ class OrdersSheet extends Sheet {
     return { products, userRowIndex };
   }
 
-  // Set the quantity ordered of a product for a user. Must be called with the
-  // spreadsheet's mutex locked.
+  // Set the quantity ordered of a product for a user.
   async setOrdered(userId, productId, quantity) {
     if (quantity < 0) {
       throw new NegativeQuantityError();
