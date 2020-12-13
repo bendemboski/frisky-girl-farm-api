@@ -16,21 +16,25 @@
   "private": false,
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.16.4",
+    "express": "^4.17.1",
     "express-async-handler": "^1.1.4",
-    "googleapis": "^36.0.0",
-    "serverless-http": "^1.8.0"
+    "googleapis": "^66.0.0",
+    "serverless-http": "^2.6.0"
+  },
+  "peerDependencies": {
+    "body-parser": "*"
   },
   "devDependencies": {
+    "babel-eslint": "^10.1.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "chai-http": "^4.2.0",
-    "eslint": "^5.10.0",
-    "eslint-plugin-turbopatent": "^4.0.0",
-    "mocha": "^5.2.0",
-    "nodemon": "^1.18.9",
-    "serverless": "^1.35.1",
-    "sinon": "^7.2.2",
-    "sinon-chai": "^3.3.0"
+    "chai-http": "^4.3.0",
+    "eslint": "^7.15.0",
+    "eslint-plugin-turbopatent": "^6.0.0",
+    "mocha": "^8.2.1",
+    "nodemon": "^2.0.6",
+    "serverless": "^2.15.0",
+    "sinon": "^9.2.2",
+    "sinon-chai": "^3.5.0"
   }
 }

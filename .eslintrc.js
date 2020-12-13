@@ -1,5 +1,6 @@
 module.exports = {
   root: true,
+  parser: 'babel-eslint',
   parserOptions: {
     ecmaVersion: 2017
   },
@@ -16,6 +17,9 @@ module.exports = {
       ],
       env: {
         mocha: true
+      },
+      rules: {
+        'node/no-unpublished-require': 'off'
       }
     }
   ]
