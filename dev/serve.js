@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 
 const buildApp = require('../src/build-app');
 const createSpreadsheet = require('./create-spreadsheet');
