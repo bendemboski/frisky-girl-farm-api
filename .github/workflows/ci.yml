@@ -8,7 +8,7 @@ jobs:
       matrix:
         node: ['12']
 
-    name: Tests (Node.js v${{ matrix.node }})
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
@@ -22,3 +22,6 @@ jobs:
       - run: yarn test
       - run: ci/deploy.sh 2>&1
         if: success() && github.ref == 'refs/heads/master'
+        env:
+          AWS_CREDENTIALS: ${{secrets.AWS_CREDENTIALS}}
+          GOOGLE_SHEETS_CONFIG: ${{secrets.GOOGLE_SHEETS_CONFIG}}

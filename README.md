@@ -83,10 +83,11 @@ be renamed to anything to close ordering.
 
 ### AWS
 
-Deploying master builds from TravisCI requires AWS credentials with permissions
-to deploy a Serverless AWS Node.js project. `ci/aws-credentials.enc` is an
-encrypted AWS credentials file. The `friskygirl` user in the file must have the
-necessary permissions to deploy a Serverless AWS Node.js project.
+Deploying master builds from GitHub actionds requires AWS credentials with
+permissions to deploy a Serverless AWS Node.js project. The `AWS_CREDENTIALS`
+GitHub repository secret contains an `~/.aws/credentials` file with credentials
+for a `friskygirl` user that must have the necessary permissions to deploy a
+Serverless AWS Node.js project.
 
 When deploying manually, you just need to assume role with the proper
 permissions per standard Serverless requirements.
@@ -107,6 +108,6 @@ Google API user with write access to the spreadsheet. Each stage (e.g. `stage`,
 }
 ```
 
-When TravisCI deploys a successful master build it deploys it to the `prod`
-stage, so `ci/credentials.tar.enc` is an encryped tarball containing our
+When GitHub actions deploys a successful master build it deploys it to the
+`prod` stage, so the `GOOGLE_SHEETS_CONFIG` repository secret contains the
 `prod` deployment info.
